@@ -1262,7 +1262,19 @@
       }).join('');
     }
 
-    function filterBooks() { renderBooks(); }
+    function filterBooks() {
+  let filtered = books.filter(book => {
+    if (currentCategory === "📘 หนังสือของคุณ") {
+      return book.is_my_book === true; // <--- แสดงเฉพาะหนังสือที่มี is_my_book = true[cite: 4]
+    }
+    if (currentCategory !== "ทั้งหมด") {
+      return book.category === currentCategory;
+    }
+    return true;
+  });
+  
+  // render filtered books...[cite: 4, 5]
+}
 
     function openBookDetail(id) {
       const found = [...BOOKS, ...myBooks].find(b => b.id === id);
@@ -1643,6 +1655,25 @@
       if (slider) slider.value = '95';
       updateConditionPreview('95');
     }
+    function handleSaveNewBook() {
+  const newBook = {
+    id: books.length + 1,
+    title: document.getElementById('add-b-title').value,
+    author: document.getElementById('add-b-author').value,
+    category: document.getElementById('add-b-cat').value,
+    buy_price: parseFloat(document.getElementById('add-b-sale').value),
+    rent_price: parseFloat(document.getElementById('add-b-rent').value),
+    is_my_book: true, // <--- บรรทัดสำคัญ! ระบุว่าเป็นหนังสือของผู้ใช้[cite: 4, 5]
+    // ... ฟิลด์อื่น ๆ[cite: 4, 5]
+  };
+
+  books.unshift(newBook);
+  
+  // สลับหมวดหมู่และแสดงผลหน้าแรก[cite: 4, 5]
+  currentCategory = "📘 หนังสือของคุณ";
+  showView('home');
+  renderBooks();
+}
 
     function handleSaveNewBook() {
       const title = document.getElementById('add-b-title').value.trim();
