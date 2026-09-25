@@ -61,7 +61,7 @@
       display: none;
     }
   </style>
-<base target="_blank">
+  <base target="_blank">
 </head>
 
 <body class="bg-earth-bg text-earth-text antialiased">
@@ -125,7 +125,7 @@
               <span class="material-symbols-outlined text-base">login</span> เข้าสู่ระบบ
             </button>
           </div>
-           <!-- ล็อกอินแล้ว: แสดงชื่อบัญชี + ปุ่มออกจากระบบ -->
+          <!-- ล็อกอินแล้ว: แสดงชื่อบัญชี + ปุ่มออกจากระบบ -->
           <div id="user-logged-in" class="hidden items-center gap-2">
             <div
               class="w-9 h-9 rounded-full bg-earth-secondary flex items-center justify-center font-cute font-bold text-earth-primary border border-earth-border"
@@ -152,7 +152,7 @@
   <!-- MAIN CONTENT CONTAINER -->
   <!-- ========================================================================= -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20">
- <!-- VIEW 0: AUTH - LOGIN / REGISTER (Guest Mode) -->
+    <!-- VIEW 0: AUTH - LOGIN / REGISTER (Guest Mode) -->
     <!-- ======================================================================= -->
     <div id="view-auth" class="hidden">
       <div class="max-w-md mx-auto py-10 px-4">
@@ -708,7 +708,7 @@
 
           <div id="uploaded-image-preview" class="grid grid-cols-3 gap-3 mt-3"></div>
 
-          <!-- Condition Slider Box -->          <!-- Condition Slider Box -->
+          <!-- Condition Slider Box --> <!-- Condition Slider Box -->
           <div class="pt-2 space-y-2">
             <div class="flex justify-between items-center">
               <b class="text-xs text-earth-primary">ประเมินสภาพหนังสือ (Condition) *</b>
@@ -1116,7 +1116,7 @@
       }
     ];
 
-        // ===================== ระบบบัญชีผู้ใช้ & เซสชัน (Auth) =====================
+    // ===================== ระบบบัญชีผู้ใช้ & เซสชัน (Auth) =====================
     // accounts = { username: { password, name, createdAt } } เก็บถาวรใน localStorage
     let accounts = JSON.parse(localStorage.getItem('bs_accounts') || '{}');
     let currentUser = null; // { username, name } เมื่อล็อกอินสำเร็จเท่านั้น
@@ -1173,7 +1173,7 @@
     let activeCategory = 'ทั้งหมด';
 
     function showView(view) {
-       // จำกัดสิทธิ์ผู้เยี่ยมชม (Guest): ดูรายละเอียดหนังสือได้อย่างเดียว ซื้อ/ยืม/ลงขายไม่ได้
+      // จำกัดสิทธิ์ผู้เยี่ยมชม (Guest): ดูรายละเอียดหนังสือได้อย่างเดียว ซื้อ/ยืม/ลงขายไม่ได้
       if (!currentUser && view === 'cart') {
         alert('🔒 กรุณาเข้าสู่ระบบหรือสมัครสมาชิกก่อนทำการซื้อ/เช่าหนังสือ');
         switchAuthTab('login');
@@ -1263,18 +1263,18 @@
     }
 
     function filterBooks() {
-  let filtered = books.filter(book => {
-    if (currentCategory === "📘 หนังสือของคุณ") {
-      return book.is_my_book === true; // <--- แสดงเฉพาะหนังสือที่มี is_my_book = true[cite: 4]
+      let filtered = books.filter(book => {
+        if (currentCategory === "📘 หนังสือของคุณ") {
+          return book.is_my_book === true; // <--- แสดงเฉพาะหนังสือที่มี is_my_book = true[cite: 4]
+        }
+        if (currentCategory !== "ทั้งหมด") {
+          return book.category === currentCategory;
+        }
+        return true;
+      });
+
+      // render filtered books...[cite: 4, 5]
     }
-    if (currentCategory !== "ทั้งหมด") {
-      return book.category === currentCategory;
-    }
-    return true;
-  });
-  
-  // render filtered books...[cite: 4, 5]
-}
 
     function openBookDetail(id) {
       const found = [...BOOKS, ...myBooks].find(b => b.id === id);
@@ -1509,7 +1509,7 @@
       updateCartCounters();
       showView('success');
     }
-        // ===================== ระบบล็อกอิน / สมัครสมาชิก / Guest =====================
+    // ===================== ระบบล็อกอิน / สมัครสมาชิก / Guest =====================
     let authMode = 'login';
 
     function switchAuthTab(mode) {
@@ -1656,24 +1656,24 @@
       updateConditionPreview('95');
     }
     function handleSaveNewBook() {
-  const newBook = {
-    id: books.length + 1,
-    title: document.getElementById('add-b-title').value,
-    author: document.getElementById('add-b-author').value,
-    category: document.getElementById('add-b-cat').value,
-    buy_price: parseFloat(document.getElementById('add-b-sale').value),
-    rent_price: parseFloat(document.getElementById('add-b-rent').value),
-    is_my_book: true, // <--- บรรทัดสำคัญ! ระบุว่าเป็นหนังสือของผู้ใช้[cite: 4, 5]
-    // ... ฟิลด์อื่น ๆ[cite: 4, 5]
-  };
+      const newBook = {
+        id: books.length + 1,
+        title: document.getElementById('add-b-title').value,
+        author: document.getElementById('add-b-author').value,
+        category: document.getElementById('add-b-cat').value,
+        buy_price: parseFloat(document.getElementById('add-b-sale').value),
+        rent_price: parseFloat(document.getElementById('add-b-rent').value),
+        is_my_book: true, // <--- บรรทัดสำคัญ! ระบุว่าเป็นหนังสือของผู้ใช้[cite: 4, 5]
+        // ... ฟิลด์อื่น ๆ[cite: 4, 5]
+      };
 
-  books.unshift(newBook);
-  
-  // สลับหมวดหมู่และแสดงผลหน้าแรก[cite: 4, 5]
-  currentCategory = "📘 หนังสือของคุณ";
-  showView('home');
-  renderBooks();
-}
+      books.unshift(newBook);
+
+      // สลับหมวดหมู่และแสดงผลหน้าแรก[cite: 4, 5]
+      currentCategory = "📘 หนังสือของคุณ";
+      showView('home');
+      renderBooks();
+    }
 
     function handleSaveNewBook() {
       const title = document.getElementById('add-b-title').value.trim();
@@ -1695,7 +1695,7 @@
         return;
       }
 
-      myBooks.unshift({      
+      myBooks.unshift({
         id: 1000 + Date.now() % 100000,
         title: title,
         fullTitle: title,
@@ -1717,6 +1717,12 @@
         thumbnails: uploadedImageData.slice(0, 3),
         isMyBook: true
       });
+      saveBooks();
+      function deleteMyBook(index) {
+        myBooks.splice(index, 1);
+        saveBooks(); // <--- อัปเดตข้อมูลถาวรหลังลบ
+        renderBooks();
+      }
 
       alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! ไปดูได้ที่หมวด "📘 หนังสือของคุณ"`);
 
