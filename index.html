@@ -1076,23 +1076,16 @@
     ];
 
     // ทะเบียนหนังสือที่ผู้ใช้ลงระบบทั้งหมด (เก็บถาวร มองเห็นข้ามบัญชี) แต่ละเล่มมี owner = username ของเจ้าของ
-    let myBooks = [];
-
     // ฟังก์ชันหาคีย์สำหรับเซฟข้อมูลหนังสือแยกตาม username บัญชีผู้ใช้
-    function getBooksKey() {
-      return currentUser ? 'bs_books_' + currentUser.username : 'bs_books_guest';
-    }
 
-    // ฟังก์ชันบันทึกหนังสือลงเบราว์เซอร์แยกตามบัญชี
+    let myBooks = JSON.parse(localStorage.getItem('bs_books') || '[]');
+
     function saveBooks() {
-      const key = getBooksKey();
-      localStorage.setItem(key, JSON.stringify(myBooks));
+      localStorage.setItem('bs_books', JSON.stringify(myBooks));
     }
 
-    // ฟังก์ชันดึงข้อมูลหนังสือของบัญชีที่ล็อกอินอยู่
     function loadBooks() {
-      const key = getBooksKey();
-      myBooks = JSON.parse(localStorage.getItem(key) || '[]');
+      myBooks = JSON.parse(localStorage.getItem('bs_books') || '[]');
     }
 
     let uploadedImageData = [];
