@@ -1323,8 +1323,11 @@
       document.getElementById('input-return-date').value = end.toISOString().split('T')[0];
 
       // หนังสือของตัวเอง: ดูรายละเอียดได้อย่างเดียว สั่งซื้อ/เช่าไม่ได้
+      // เช็คว่าเป็นหนังสือของบัญชีที่ล็อกอินอยู่จริงหรือไม่
+      const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
+
       const ownerNotice = document.getElementById('detail-owner-notice');
-      if (selectedBook.isMyBook) {
+      if (isOwner) { // <--- เปลี่ยนมาเช็คผ่านตัวแปร isOwner แทน
         ownerNotice.classList.remove('hidden');
         document.getElementById('option-rent-card').classList.add('hidden');
         document.getElementById('option-buy-card').classList.add('hidden');
@@ -1340,7 +1343,6 @@
         document.getElementById('btn-detail-instant').classList.remove('hidden');
         selectDetailMode('rent');
       }
-
       showView('detail');
     }
 
