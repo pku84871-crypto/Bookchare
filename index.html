@@ -1089,7 +1089,6 @@
     }
 
     let uploadedImageData = [];
-
     let meenaBooks = [
       {
         id: 1,
@@ -1387,39 +1386,44 @@
     }
 
     function handleAddToCartFromDetail() {
-      if (selectedBook.isMyBook) {
-        alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
-        return;
-      }
-      if (detailMode === 'rent') {
-        const s = new Date(document.getElementById('input-start-date').value);
-        const e = new Date(document.getElementById('input-return-date').value);
-        let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
-        cartRent.push({
-          id: selectedBook.id,
-          title: selectedBook.fullTitle,
-          author: selectedBook.author,
-          days: diff,
-          returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
-          rentFee: diff * selectedBook.rentRate,
-          deposit: selectedBook.deposit,
-          img: selectedBook.img
-        });
-        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
-      } else {
-        cartBuy.push({
-          id: selectedBook.id,
-          title: selectedBook.fullTitle,
-          author: selectedBook.author,
-          tag: 'ซื้อขาดมือสอง จัดส่งทันที',
-          price: selectedBook.buyPrice,
-          origPrice: selectedBook.originalPrice,
-          img: selectedBook.img
-        });
-        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
-      }
-      updateCartCounters();
-    }
+  // เช็คว่าผู้ใช้ที่กำลังกดซื้อ เป็นเจ้าของหนังสือเล่มนี้จริงๆ หรือไม่
+  const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
+  
+  if (isOwner) { // <--- เปลี่ยนมาเช็คว่าเป็นเจ้าของตัวจริงหรือไม่
+    alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
+    return;
+  }
+
+  if (detailMode === 'rent') {
+    const s = new Date(document.getElementById('input-start-date').value);
+    const e = new Date(document.getElementById('input-return-date').value);
+    let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
+    cartRent.push({
+      id: selectedBook.id,
+      title: selectedBook.fullTitle,
+      author: selectedBook.author,
+      days: diff,
+      returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+      rentFee: diff * selectedBook.rentRate,
+      deposit: selectedBook.deposit,
+      img: selectedBook.img
+    });
+    alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
+  } else {
+    cartBuy.push({
+      id: selectedBook.id,
+      title: selectedBook.fullTitle,
+      author: selectedBook.author,
+      tag: 'ซื้อขาดมือสอง จัดส่งทันที',
+      price: selectedBook.buyPrice,
+      origPrice: selectedBook.originalPrice,
+      img: selectedBook.img
+    });
+    alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
+  }
+  saveCarts();
+  updateCartCounters();
+}
 
     function handleInstantActionFromDetail() {
       handleAddToCartFromDetail();
