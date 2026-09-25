@@ -1225,65 +1225,70 @@
     function renderBooks() {
       const search = document.getElementById('header-search').value.toLowerCase().trim();
       const grid = document.getElementById('book-grid');
+
+      // รวมรายการหนังสือทั้งหมดในระบบ (หนังสือเริ่มต้น + หนังสือที่ผู้ใช้ลงเพิ่ม)
       const allBooks = [...myBooks, ...BOOKS];
+
       const list = allBooks.filter(book => {
-        if (activeCategory === '📘 หนังสือของคุณ') return book.owner && currentUser && book.owner === currentUser.username;
-        if (activeCategory !== 'ทั้งหมด' && book.category !== activeCategory) return false;
+        // 1. ถ้ามีการพิมพ์คำค้นหา (Search) ให้ค้นจาก Title, Author, Category และ Seller
         if (search) {
-          const hay = (book.title + ' ' + book.author + ' ' + book.category).toLowerCase();
-          if (!hay.includes(search)) return false;
+          const searchHaystack = (book.title + ' ' + book.author + ' ' + book.category + ' ' + (book.seller || '')).toLowerCase();
+          if (!searchHaystack.includes(search)) return false;
         }
+
+        // 2. กรองตามหมวดหมู่ (Category Filter)
+        if (activeCategory === '📘 หนังสือของคุณ') {
+          return book.owner && currentUser && (book.owner === currentUser.username);
+        }
+
+        if (activeCategory !== 'ทั้งหมด' && book.category !== activeCategory) {
+          return false;
+        }
+
         return true;
       });
 
       if (list.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-sm text-earth-muted py-8">ไม่พบหนังสือในหมวดหมู่นี้</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sm text-earth-muted py-8">ไม่พบรายการหนังสือที่คุณค้นหา</p>';
         return;
       }
 
+      // แสดงผลการ์ดหนังสือตามปกติ...
       grid.innerHTML = list.map(b => {
-        const badge = b.isMyBook
+        const isOwner = b.owner && currentUser && (b.owner === currentUser.username);
+        const badge = isOwner
           ? '<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#7251B5] text-white text-[10px] font-bold">📘 หนังสือของคุณ</span>'
-          : `<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-earth-sage text-white text-[10px] font-bold">${b.statusText}</span>`;
+          : `<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-earth-sage text-white text-[10px] font-bold">${b.statusText || 'พร้อมให้ยืม'}</span>`;
+
         const priceLine = (b.rentRate > 0)
           ? `<span class="text-[10px] text-earth-muted block">ยืม ฿${b.rentRate}/วัน</span>
-             <span class="text-xs font-bold text-earth-primary">ซื้อ ฿${b.buyPrice}</span>`
+         <span class="text-xs font-bold text-earth-primary">ซื้อ ฿${b.buyPrice}</span>`
           : `<span class="text-xs font-bold text-earth-primary">ขาย ฿${b.buyPrice}</span>`;
+
         return `
-        <div class="bg-white rounded-2xl p-4 border border-earth-border shadow-sm hover:shadow-md transition flex flex-col justify-between">
-          <div>
-            <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-earth-bg mb-3 cursor-pointer" onclick="openBookDetail(${b.id})">
-              <img src="${b.img}" class="w-full h-full object-cover"/>
-              ${badge}
-              <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-white text-earth-primary text-[10px] font-semibold">${b.condition}</span>
-            </div>
-            <span class="text-[11px] text-earth-muted block mb-0.5">${b.category}</span>
-            <h4 class="font-bold text-earth-primary text-sm line-clamp-1 cursor-pointer hover:text-earth-accent" onclick="openBookDetail(${b.id})">${b.title}</h4>
-            <p class="text-xs text-earth-muted truncate mb-2">${b.author}</p>
-          </div>
-          <div class="pt-2 border-t border-earth-border flex items-center justify-between mt-1">
-            <div>${priceLine}</div>
-            <button onclick="openBookDetail(${b.id})" class="p-2 rounded-xl bg-earth-primary text-white hover:bg-earth-primary-hover shadow-sm">
-              <span class="material-symbols-outlined text-base">arrow_forward</span>
-            </button>
-          </div>
-        </div>`;
+    <div class="bg-white rounded-2xl p-4 border border-earth-border shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-earth-bg mb-3 cursor-pointer" onclick="openBookDetail(${b.id})">
+          <img src="${b.img}" class="w-full h-full object-cover"/>
+          ${badge}
+          <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-white text-earth-primary text-[10px] font-semibold">${b.condition || '95%'}</span>
+        </div>
+        <span class="text-[11px] text-earth-muted block mb-0.5">${b.category}</span>
+        <h4 class="font-bold text-earth-primary text-sm line-clamp-1 cursor-pointer hover:text-earth-accent" onclick="openBookDetail(${b.id})">${b.title}</h4>
+        <p class="text-xs text-earth-muted truncate mb-2">${b.author}</p>
+      </div>
+      <div class="pt-2 border-t border-earth-border flex items-center justify-between mt-1">
+        <div>${priceLine}</div>
+        <button onclick="openBookDetail(${b.id})" class="p-2 rounded-xl bg-earth-primary text-white hover:bg-earth-primary-hover shadow-sm">
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+        </button>
+      </div>
+    </div>`;
       }).join('');
     }
 
-    function filterBooks() {
-      let filtered = books.filter(book => {
-        if (currentCategory === "📘 หนังสือของคุณ") {
-          return book.is_my_book === true; // <--- แสดงเฉพาะหนังสือที่มี is_my_book = true[cite: 4]
-        }
-        if (currentCategory !== "ทั้งหมด") {
-          return book.category === currentCategory;
-        }
-        return true;
-      });
-
-      // render filtered books...[cite: 4, 5]
-    }
+    function filterBooks() { renderBooks(); }
+    
     function filterBySeller(username) {
       activeCategory = 'ทั้งหมด';
       document.getElementById('header-search').value = '';
