@@ -1076,8 +1076,25 @@
     ];
 
     // ทะเบียนหนังสือที่ผู้ใช้ลงระบบทั้งหมด (เก็บถาวร มองเห็นข้ามบัญชี) แต่ละเล่มมี owner = username ของเจ้าของ
-    let myBooks = JSON.parse(localStorage.getItem('bs_books') || '[]');
-    function saveBooks() { localStorage.setItem('bs_books', JSON.stringify(myBooks)); }
+    let myBooks = [];
+
+    // ฟังก์ชันหาคีย์สำหรับเซฟข้อมูลหนังสือแยกตาม username บัญชีผู้ใช้
+    function getBooksKey() {
+      return currentUser ? 'bs_books_' + currentUser.username : 'bs_books_guest';
+    }
+
+    // ฟังก์ชันบันทึกหนังสือลงเบราว์เซอร์แยกตามบัญชี
+    function saveBooks() {
+      const key = getBooksKey();
+      localStorage.setItem(key, JSON.stringify(myBooks));
+    }
+
+    // ฟังก์ชันดึงข้อมูลหนังสือของบัญชีที่ล็อกอินอยู่
+    function loadBooks() {
+      const key = getBooksKey();
+      myBooks = JSON.parse(localStorage.getItem(key) || '[]');
+    }
+
     let uploadedImageData = [];
 
     let meenaBooks = [
@@ -1566,8 +1583,9 @@
 
     function doLogin(uname, acc) {
       currentUser = { username: uname, name: acc.name || uname };
-      localStorage.setItem('bs_session', JSON.stringify(currentUser)); // จดจำการล็อกอิน
-      loadCarts();          // โหลดตะกร้าของบัญชีนี้ (แยกข้อมูลตามบัญชี)
+      localStorage.setItem('bs_session', JSON.stringify(currentUser));
+      loadCarts();
+      loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อดึงหนังสือเฉพาะของบัญชีที่เพิ่งล็อกอิน
       updateAuthUI();
       updateCartCounters();
       renderBooks();
@@ -1581,6 +1599,7 @@
       currentUser = null;
       localStorage.removeItem('bs_session');
       cartRent = []; cartBuy = [];
+      loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อล้าง/โหลดหนังสือของผู้เยี่ยมชม (Guest)
       updateAuthUI();
       updateCartCounters();
       renderBooks();
@@ -1712,12 +1731,14 @@
         deposit: dep,
         img: uploadedImageData[0],
         desc: `หนังสือที่คุณลงทะเบียนเข้าระบบ (${lType})`,
-        seller: currentUser.name,
+        seller: currentUser ? currentUser.name : 'คุณมีนา',
+        owner: currentUser ? currentUser.username : 'guest',
         rating: '5.0 (เจ้าของหนังสือ)',
         thumbnails: uploadedImageData.slice(0, 3),
         isMyBook: true
       });
-      saveBooks();
+
+      saveBooks(); // <--- เรียกใช้เพื่อบันทึกหนังสือใส่คีย์ของบัญชีตนเองถาวร
       function deleteMyBook(index) {
         myBooks.splice(index, 1);
         saveBooks(); // <--- อัปเดตข้อมูลถาวรหลังลบ
@@ -1783,6 +1804,14 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // หากมีเซสชันค้างอยู่ ให้ดึงcurrentUser ขึ้นมาก่อน
+      const savedSession = localStorage.getItem('bs_session');
+      if (savedSession) {
+        try { currentUser = JSON.parse(savedSession); } catch (e) { }
+      }
+
+      loadBooks(); // <--- ดึงหนังสือของบัญชีที่ล็อกอินค้างไว้
+      updateAuthUI();
       renderCategories();
       renderBooks();
       updateCartCounters();
