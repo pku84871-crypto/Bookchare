@@ -383,7 +383,7 @@
                 <span class="text-[11px] text-earth-muted">(ส่งต่อแล้ว 142 เล่ม)</span>
               </div>
             </div>
-            <button
+            <button id="btn-seller-shelf"
               class="px-3 py-1.5 bg-white border border-earth-border rounded-xl text-xs font-bold text-earth-primary shadow-sm hover:bg-earth-secondary/40">
               ดูตู้หนังสือ
             </button>
@@ -1284,6 +1284,45 @@
 
       // render filtered books...[cite: 4, 5]
     }
+    function filterBySeller(username) {
+      activeCategory = 'ทั้งหมด';
+      document.getElementById('header-search').value = '';
+
+      // กรองแสดงเฉพาะหนังสือที่มี owner ตรงกับผู้ขายคนนี้
+      const grid = document.getElementById('book-grid');
+      const list = myBooks.filter(b => b.owner === username);
+
+      renderCategories();
+      showView('home');
+
+      if (list.length === 0) {
+        grid.innerHTML = `<p class="col-span-full text-center text-sm text-earth-muted py-8">ผู้ขายรายนี้ยังไม่มีหนังสือเล่มอื่นในระบบ</p>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(b => `
+    <div class="bg-white rounded-2xl p-4 border border-earth-border shadow-sm hover:shadow-md transition flex flex-col justify-between">
+      <div>
+        <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-earth-bg mb-3 cursor-pointer" onclick="openBookDetail(${b.id})">
+          <img src="${b.img}" class="w-full h-full object-cover"/>
+          <span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-earth-sage text-white text-[10px] font-bold">${b.statusText || 'พร้อมให้ยืม'}</span>
+        </div>
+        <span class="text-[11px] text-earth-muted block mb-0.5">${b.category}</span>
+        <h4 class="font-bold text-earth-primary text-sm line-clamp-1 cursor-pointer hover:text-earth-accent" onclick="openBookDetail(${b.id})">${b.title}</h4>
+        <p class="text-xs text-earth-muted truncate mb-2">${b.author}</p>
+      </div>
+      <div class="pt-2 border-t border-earth-border flex items-center justify-between mt-1">
+        <div>
+          <span class="text-[10px] text-earth-muted block">ยืม ฿${b.rentRate}/วัน</span>
+          <span class="text-xs font-bold text-earth-primary">ซื้อ ฿${b.buyPrice}</span>
+        </div>
+        <button onclick="openBookDetail(${b.id})" class="p-2 rounded-xl bg-earth-primary text-white hover:bg-earth-primary-hover shadow-sm">
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  `).join('');
+    }
 
     function openBookDetail(id) {
       const found = [...BOOKS, ...myBooks].find(b => b.id === id);
@@ -1303,6 +1342,7 @@
       document.getElementById('detail-rent-rate').innerText = `฿${selectedBook.rentRate} /วัน`;
       document.getElementById('detail-buy-price').innerText = `฿${selectedBook.buyPrice}`;
       document.getElementById('detail-original-price').innerText = `฿${selectedBook.originalPrice}`;
+      document.getElementById('btn-seller-shelf').onclick = function() { filterBySeller(selectedBook.owner); };
 
       const tBox = document.getElementById('detail-thumbnails');
       tBox.innerHTML = (selectedBook.thumbnails || [selectedBook.img]).map(t =>
@@ -1386,44 +1426,44 @@
     }
 
     function handleAddToCartFromDetail() {
-  // เช็คว่าผู้ใช้ที่กำลังกดซื้อ เป็นเจ้าของหนังสือเล่มนี้จริงๆ หรือไม่
-  const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
-  
-  if (isOwner) { // <--- เปลี่ยนมาเช็คว่าเป็นเจ้าของตัวจริงหรือไม่
-    alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
-    return;
-  }
+      // เช็คว่าผู้ใช้ที่กำลังกดซื้อ เป็นเจ้าของหนังสือเล่มนี้จริงๆ หรือไม่
+      const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
 
-  if (detailMode === 'rent') {
-    const s = new Date(document.getElementById('input-start-date').value);
-    const e = new Date(document.getElementById('input-return-date').value);
-    let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
-    cartRent.push({
-      id: selectedBook.id,
-      title: selectedBook.fullTitle,
-      author: selectedBook.author,
-      days: diff,
-      returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
-      rentFee: diff * selectedBook.rentRate,
-      deposit: selectedBook.deposit,
-      img: selectedBook.img
-    });
-    alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
-  } else {
-    cartBuy.push({
-      id: selectedBook.id,
-      title: selectedBook.fullTitle,
-      author: selectedBook.author,
-      tag: 'ซื้อขาดมือสอง จัดส่งทันที',
-      price: selectedBook.buyPrice,
-      origPrice: selectedBook.originalPrice,
-      img: selectedBook.img
-    });
-    alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
-  }
-  saveCarts();
-  updateCartCounters();
-}
+      if (isOwner) { // <--- เปลี่ยนมาเช็คว่าเป็นเจ้าของตัวจริงหรือไม่
+        alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
+        return;
+      }
+
+      if (detailMode === 'rent') {
+        const s = new Date(document.getElementById('input-start-date').value);
+        const e = new Date(document.getElementById('input-return-date').value);
+        let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
+        cartRent.push({
+          id: selectedBook.id,
+          title: selectedBook.fullTitle,
+          author: selectedBook.author,
+          days: diff,
+          returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+          rentFee: diff * selectedBook.rentRate,
+          deposit: selectedBook.deposit,
+          img: selectedBook.img
+        });
+        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
+      } else {
+        cartBuy.push({
+          id: selectedBook.id,
+          title: selectedBook.fullTitle,
+          author: selectedBook.author,
+          tag: 'ซื้อขาดมือสอง จัดส่งทันที',
+          price: selectedBook.buyPrice,
+          origPrice: selectedBook.originalPrice,
+          img: selectedBook.img
+        });
+        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
+      }
+      saveCarts();
+      updateCartCounters();
+    }
 
     function handleInstantActionFromDetail() {
       handleAddToCartFromDetail();
@@ -1753,41 +1793,74 @@
     }
 
     function renderShelf() {
-      document.getElementById('shelf-total-badge').innerText = `หนังสือทั้งหมดในคลัง: ${meenaBooks.length} เล่ม`;
+      if (!currentUser) return;
+
+      // 1. เปลี่ยนชื่อร้านค้าตามบัญชีที่ล็อกอินอยู่
+      const storeTitle = document.querySelector('#view-seller-shelf h2');
+      if (storeTitle) {
+        storeTitle.innerText = `ร้านหนังสือของ${currentUser.name} (${currentUser.username}'s Shelf)`;
+      }
+
+      // 2. กรองเฉพาะหนังสือที่เป็นของบัญชีนี้
+      const userBooks = myBooks.filter(b => b.owner === currentUser.username);
+
+      document.getElementById('shelf-total-badge').innerText = `หนังสือทั้งหมดในคลัง: ${userBooks.length} เล่ม`;
       const tbody = document.getElementById('shelf-books-tbody');
-      tbody.innerHTML = meenaBooks.map((b, idx) => `
-        <tr class="hover:bg-earth-bg/60 transition">
-          <td class="py-3 px-2">
-            <div class="flex items-center gap-3">
-              <img src="${b.img}" class="w-10 h-14 object-cover rounded-lg border border-earth-border"/>
-              <div>
-                <b class="text-earth-primary block line-clamp-1">${b.title}</b>
-                <span class="text-[11px] text-earth-muted">${b.author}</span><br>
-                <span class="text-[10px] text-earth-muted/80">ISBN: ${b.isbn}</span>
-              </div>
+
+      if (userBooks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-earth-muted">ยังไม่มีรายการหนังสือที่คุณลงไว้</td></tr>`;
+        return;
+      }
+
+      // 3. แสดงรายการหนังสือ พร้อมปุ่มลบหนังสือ
+      tbody.innerHTML = userBooks.map((b) => {
+        // หาตำแหน่ง index จริงใน myBooks เพื่อใช้ลบ
+        const realIndex = myBooks.findIndex(item => item.id === b.id);
+
+        return `
+      <tr class="hover:bg-earth-bg/60 transition">
+        <td class="py-3 px-2">
+          <div class="flex items-center gap-3">
+            <img src="${b.img}" class="w-10 h-14 object-cover rounded-lg border border-earth-border"/>
+            <div>
+              <b class="text-earth-primary block line-clamp-1">${b.title}</b>
+              <span class="text-[11px] text-earth-muted">${b.author}</span><br>
+              <span class="text-[10px] text-earth-muted/80">ISBN: ${b.isbn}</span>
             </div>
-          </td>
-          <td class="py-3 px-2">
-            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${b.typeClass || 'bg-earth-sage-light text-earth-sage-dark'}">
-              ${b.typeBadge}
-            </span>
-          </td>
-          <td class="py-3 px-2 leading-relaxed">
-            ${b.priceStructure}
-          </td>
-          <td class="py-3 px-2">
-            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-earth-sage-light text-earth-sage-dark">
-              ${b.status}
-            </span>
-          </td>
-          <td class="py-3 px-2 text-center">
-            <div class="flex items-center justify-center gap-1.5">
-              <button class="p-1.5 rounded-lg border border-earth-border hover:bg-earth-bg" title="แก้ไข">✏️</button>
-              <button onclick="meenaBooks.splice(${idx},1); renderShelf();" class="p-1.5 rounded-lg border border-earth-border hover:bg-red-50 text-red-500" title="ลบ">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+          </div>
+        </td>
+        <td class="py-3 px-2">
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-earth-sage-light text-earth-sage-dark">
+            ${b.statusText || '📘 หนังสือของคุณ'}
+          </span>
+        </td>
+        <td class="py-3 px-2 leading-relaxed">
+          เช่า ฿${b.rentRate}/วัน <br>มัดจำ ฿${b.deposit} • ขาย ฿${b.buyPrice}
+        </td>
+        <td class="py-3 px-2">
+          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-earth-sage-light text-earth-sage-dark">
+            🟢 ว่าง พร้อมให้เช่า/ซื้อ
+          </span>
+        </td>
+        <td class="py-3 px-2 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button onclick="deleteBookFromShelf(${realIndex})" class="p-1.5 rounded-lg border border-earth-border hover:bg-red-50 text-red-500" title="ลบหนังสือ">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+      }).join('');
+    }
+
+    // ฟังก์ชันสำหรับลบหนังสือออกจากคลัง
+    function deleteBookFromShelf(index) {
+      if (confirm('คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?')) {
+        myBooks.splice(index, 1);
+        saveBooks();
+        renderShelf();
+        renderBooks();
+        alert('ลบรายการหนังสือเรียบร้อยแล้ว');
+      }
     }
 
     function openLoginModal() { openModal('login-modal'); }
