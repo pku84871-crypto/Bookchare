@@ -1244,11 +1244,13 @@
       }
 
       grid.innerHTML = list.map(b => {
-        const isOwner = b.owner && currentUser && (b.owner === currentUser.username);
-        const badge = isOwner
-          ? '<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#7251B5] text-white text-[10px] font-bold">📘 หนังสือของคุณ</span>'
-          : `<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-earth-sage text-white text-[10px] font-bold">${b.statusText || 'พร้อมให้ยืม'}</span>`;
+        // กำหนดให้ป้ายแสดงสถานะของหนังสือเสมอ (เช่น พร้อมให้ยืม / ขายขาด / พร้อมส่ง)
+        const statusTextToShow = b.statusText || (b.rentRate > 0 ? 'พร้อมให้ยืม' : 'ขายขาด');
 
+        // เลือกสีป้ายตามประเภทการขาย/ยืม
+        const badgeColor = (b.rentRate > 0) ? 'bg-earth-sage' : 'bg-earth-accent';
+
+        const badge = `<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full ${badgeColor} text-white text-[10px] font-bold shadow-sm">${statusTextToShow}</span>`;
         const priceLine = (b.rentRate > 0)
           ? `<span class="text-[10px] text-earth-muted block">ยืม ฿${b.rentRate}/วัน</span>
              <span class="text-xs font-bold text-earth-primary">ซื้อ ฿${b.buyPrice}</span>`
@@ -1293,12 +1295,24 @@
         return;
       }
 
-      grid.innerHTML = list.map(b => `
+      grid.innerHTML = list.map(b => {
+        // 1. กำหนดข้อความและสีป้ายตามหมวดหมู่
+        const isMyTab = (activeCategory === '📘 หนังสือของคุณ');
+        const statusTextToShow = isMyTab
+          ? '📘 หนังสือของคุณ'
+          : (b.statusText || (b.rentRate > 0 ? 'พร้อมให้ยืม' : 'ขายขาด'));
+        const badgeColor = isMyTab
+          ? 'bg-[#7251B5]'
+          : (b.rentRate > 0 ? 'bg-earth-sage' : 'bg-earth-accent');
+
+        // 2. คืนค่า HTML ออกมา
+        return `
     <div class="bg-white rounded-2xl p-4 border border-earth-border shadow-sm hover:shadow-md transition flex flex-col justify-between">
       <div>
         <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-earth-bg mb-3 cursor-pointer" onclick="openBookDetail(${b.id})">
           <img src="${b.img}" class="w-full h-full object-cover"/>
-          <span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-earth-sage text-white text-[10px] font-bold">${b.statusText || 'พร้อมให้ยืม'}</span>
+          <span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full ${badgeColor} text-white text-[10px] font-bold shadow-sm">${statusTextToShow}</span>
+          <span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-white text-earth-primary text-[10px] font-semibold">${b.condition || '95%'}</span>
         </div>
         <span class="text-[11px] text-earth-muted block mb-0.5">${b.category}</span>
         <h4 class="font-bold text-earth-primary text-sm line-clamp-1 cursor-pointer hover:text-earth-accent" onclick="openBookDetail(${b.id})">${b.title}</h4>
@@ -1313,168 +1327,167 @@
           <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
       </div>
-    </div>
-  `).join('');
-    }
+    </div>`;
+      }).join('');
 
-    function openBookDetail(id) {
-      const found = [...BOOKS, ...myBooks].find(b => b.id === id);
-      if (!found) return;
-      selectedBook = found;
+      function openBookDetail(id) {
+        const found = [...BOOKS, ...myBooks].find(b => b.id === id);
+        if (!found) return;
+        selectedBook = found;
 
-      document.getElementById('detail-breadcrumb').innerText = `หน้าแรก / ${selectedBook.category} / ${selectedBook.title}`;
-      document.getElementById('detail-img').src = selectedBook.img;
-      document.getElementById('detail-condition-badge').innerText = `● ${selectedBook.conditionFull}`;
-      document.getElementById('detail-cat-badge').innerText = selectedBook.category;
-      document.getElementById('detail-isbn').innerText = `ISBN: ${selectedBook.isbn}`;
-      document.getElementById('detail-title').innerText = selectedBook.fullTitle;
-      document.getElementById('detail-author').innerText = selectedBook.author;
-      document.getElementById('detail-desc').innerText = selectedBook.desc;
-      document.getElementById('detail-seller').innerText = selectedBook.seller || currentUser.name;
-      document.getElementById('detail-rating').innerText = `★ ${selectedBook.rating || '5.0'}`;
-      document.getElementById('detail-rent-rate').innerText = `฿${selectedBook.rentRate} /วัน`;
-      document.getElementById('detail-buy-price').innerText = `฿${selectedBook.buyPrice}`;
-      document.getElementById('detail-original-price').innerText = `฿${selectedBook.originalPrice}`;
-      document.getElementById('btn-seller-shelf').onclick = function () { filterBySeller(selectedBook.owner); };
+        document.getElementById('detail-breadcrumb').innerText = `หน้าแรก / ${selectedBook.category} / ${selectedBook.title}`;
+        document.getElementById('detail-img').src = selectedBook.img;
+        document.getElementById('detail-condition-badge').innerText = `● ${selectedBook.conditionFull}`;
+        document.getElementById('detail-cat-badge').innerText = selectedBook.category;
+        document.getElementById('detail-isbn').innerText = `ISBN: ${selectedBook.isbn}`;
+        document.getElementById('detail-title').innerText = selectedBook.fullTitle;
+        document.getElementById('detail-author').innerText = selectedBook.author;
+        document.getElementById('detail-desc').innerText = selectedBook.desc;
+        document.getElementById('detail-seller').innerText = selectedBook.seller || currentUser.name;
+        document.getElementById('detail-rating').innerText = `★ ${selectedBook.rating || '5.0'}`;
+        document.getElementById('detail-rent-rate').innerText = `฿${selectedBook.rentRate} /วัน`;
+        document.getElementById('detail-buy-price').innerText = `฿${selectedBook.buyPrice}`;
+        document.getElementById('detail-original-price').innerText = `฿${selectedBook.originalPrice}`;
+        document.getElementById('btn-seller-shelf').onclick = function () { filterBySeller(selectedBook.owner); };
 
-      const tBox = document.getElementById('detail-thumbnails');
-      tBox.innerHTML = (selectedBook.thumbnails || [selectedBook.img]).map(t =>
-        `<img src="${t}" onclick="document.getElementById('detail-img').src='${t}'" class="w-full h-16 object-cover rounded-xl border border-earth-border cursor-pointer"/>`
-      ).join('');
+        const tBox = document.getElementById('detail-thumbnails');
+        tBox.innerHTML = (selectedBook.thumbnails || [selectedBook.img]).map(t =>
+          `<img src="${t}" onclick="document.getElementById('detail-img').src='${t}'" class="w-full h-16 object-cover rounded-xl border border-earth-border cursor-pointer"/>`
+        ).join('');
 
-      const now = new Date();
-      const end = new Date(); end.setDate(now.getDate() + 10);
-      document.getElementById('input-start-date').value = now.toISOString().split('T')[0];
-      document.getElementById('input-return-date').value = end.toISOString().split('T')[0];
+        const now = new Date();
+        const end = new Date(); end.setDate(now.getDate() + 10);
+        document.getElementById('input-start-date').value = now.toISOString().split('T')[0];
+        document.getElementById('input-return-date').value = end.toISOString().split('T')[0];
 
-      // หนังสือของตัวเอง: ดูรายละเอียดได้อย่างเดียว สั่งซื้อ/เช่าไม่ได้
-      // เช็คว่าเป็นหนังสือของบัญชีที่ล็อกอินอยู่จริงหรือไม่
-      const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
+        // หนังสือของตัวเอง: ดูรายละเอียดได้อย่างเดียว สั่งซื้อ/เช่าไม่ได้
+        // เช็คว่าเป็นหนังสือของบัญชีที่ล็อกอินอยู่จริงหรือไม่
+        const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
 
-      const ownerNotice = document.getElementById('detail-owner-notice');
-      if (isOwner) { // <--- เปลี่ยนมาเช็คผ่านตัวแปร isOwner แทน
-        ownerNotice.classList.remove('hidden');
-        document.getElementById('option-rent-card').classList.add('hidden');
-        document.getElementById('option-buy-card').classList.add('hidden');
-        document.getElementById('rental-calendar-box').classList.add('hidden');
-        document.getElementById('btn-detail-add').classList.add('hidden');
-        document.getElementById('btn-detail-instant').classList.add('hidden');
-      } else {
-        ownerNotice.classList.add('hidden');
-        document.getElementById('option-rent-card').classList.remove('hidden');
-        document.getElementById('option-buy-card').classList.remove('hidden');
-        document.getElementById('rental-calendar-box').classList.remove('hidden');
-        document.getElementById('btn-detail-add').classList.remove('hidden');
-        document.getElementById('btn-detail-instant').classList.remove('hidden');
-        selectDetailMode('rent');
+        const ownerNotice = document.getElementById('detail-owner-notice');
+        if (isOwner) { // <--- เปลี่ยนมาเช็คผ่านตัวแปร isOwner แทน
+          ownerNotice.classList.remove('hidden');
+          document.getElementById('option-rent-card').classList.add('hidden');
+          document.getElementById('option-buy-card').classList.add('hidden');
+          document.getElementById('rental-calendar-box').classList.add('hidden');
+          document.getElementById('btn-detail-add').classList.add('hidden');
+          document.getElementById('btn-detail-instant').classList.add('hidden');
+        } else {
+          ownerNotice.classList.add('hidden');
+          document.getElementById('option-rent-card').classList.remove('hidden');
+          document.getElementById('option-buy-card').classList.remove('hidden');
+          document.getElementById('rental-calendar-box').classList.remove('hidden');
+          document.getElementById('btn-detail-add').classList.remove('hidden');
+          document.getElementById('btn-detail-instant').classList.remove('hidden');
+          selectDetailMode('rent');
+        }
+        showView('detail');
       }
-      showView('detail');
-    }
 
-    function selectDetailMode(mode) {
-      if (selectedBook.isMyBook) return;
-      detailMode = mode;
-      const rentCard = document.getElementById('option-rent-card');
-      const buyCard = document.getElementById('option-buy-card');
-      const calBox = document.getElementById('rental-calendar-box');
-      const btnInstant = document.getElementById('btn-detail-instant');
-      const lblInstant = document.getElementById('label-detail-instant');
+      function selectDetailMode(mode) {
+        if (selectedBook.isMyBook) return;
+        detailMode = mode;
+        const rentCard = document.getElementById('option-rent-card');
+        const buyCard = document.getElementById('option-buy-card');
+        const calBox = document.getElementById('rental-calendar-box');
+        const btnInstant = document.getElementById('btn-detail-instant');
+        const lblInstant = document.getElementById('label-detail-instant');
 
-      if (mode === 'rent') {
-        document.getElementById('radio-rent').checked = true;
-        document.getElementById('radio-buy').checked = false;
-        rentCard.className = 'cursor-pointer border-2 border-earth-sage bg-earth-sage-light/20 p-4 rounded-2xl transition flex justify-between items-center';
-        buyCard.className = 'cursor-pointer border border-earth-border bg-white p-4 rounded-2xl transition flex justify-between items-center';
-        calBox.classList.remove('hidden');
-        btnInstant.className = 'py-3.5 rounded-2xl bg-earth-primary text-white font-bold text-sm hover:bg-earth-primary-hover shadow-md transition flex items-center justify-center gap-2';
+        if (mode === 'rent') {
+          document.getElementById('radio-rent').checked = true;
+          document.getElementById('radio-buy').checked = false;
+          rentCard.className = 'cursor-pointer border-2 border-earth-sage bg-earth-sage-light/20 p-4 rounded-2xl transition flex justify-between items-center';
+          buyCard.className = 'cursor-pointer border border-earth-border bg-white p-4 rounded-2xl transition flex justify-between items-center';
+          calBox.classList.remove('hidden');
+          btnInstant.className = 'py-3.5 rounded-2xl bg-earth-primary text-white font-bold text-sm hover:bg-earth-primary-hover shadow-md transition flex items-center justify-center gap-2';
+          updateRentalCalc();
+        } else {
+          document.getElementById('radio-rent').checked = false;
+          document.getElementById('radio-buy').checked = true;
+          rentCard.className = 'cursor-pointer border border-earth-border bg-white p-4 rounded-2xl transition flex justify-between items-center';
+          buyCard.className = 'cursor-pointer border-2 border-earth-accent bg-earth-accent/10 p-4 rounded-2xl transition flex justify-between items-center';
+          calBox.classList.add('hidden');
+          btnInstant.className = 'py-3.5 rounded-2xl bg-earth-accent text-white font-bold text-sm hover:bg-earth-accent-hover shadow-md transition flex items-center justify-center gap-2';
+          lblInstant.innerText = `ซื้อทันที (฿${selectedBook.buyPrice})`;
+        }
+      }
+
+      function setRentalDays(d) {
+        const s = new Date(document.getElementById('input-start-date').value || new Date());
+        const e = new Date(s); e.setDate(s.getDate() + d);
+        document.getElementById('input-return-date').value = e.toISOString().split('T')[0];
         updateRentalCalc();
-      } else {
-        document.getElementById('radio-rent').checked = false;
-        document.getElementById('radio-buy').checked = true;
-        rentCard.className = 'cursor-pointer border border-earth-border bg-white p-4 rounded-2xl transition flex justify-between items-center';
-        buyCard.className = 'cursor-pointer border-2 border-earth-accent bg-earth-accent/10 p-4 rounded-2xl transition flex justify-between items-center';
-        calBox.classList.add('hidden');
-        btnInstant.className = 'py-3.5 rounded-2xl bg-earth-accent text-white font-bold text-sm hover:bg-earth-accent-hover shadow-md transition flex items-center justify-center gap-2';
-        lblInstant.innerText = `ซื้อทันที (฿${selectedBook.buyPrice})`;
-      }
-    }
-
-    function setRentalDays(d) {
-      const s = new Date(document.getElementById('input-start-date').value || new Date());
-      const e = new Date(s); e.setDate(s.getDate() + d);
-      document.getElementById('input-return-date').value = e.toISOString().split('T')[0];
-      updateRentalCalc();
-    }
-
-    function updateRentalCalc() {
-      const s = new Date(document.getElementById('input-start-date').value);
-      const e = new Date(document.getElementById('input-return-date').value);
-      let diff = Math.max(1, Math.min(30, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1));
-      const rTotal = diff * selectedBook.rentRate;
-      const total = rTotal + selectedBook.deposit;
-      document.getElementById('calc-days-line').innerHTML = `${diff} วัน × ฿${selectedBook.rentRate}/วัน = <span class="text-earth-accent font-bold">฿${rTotal}</span>`;
-      document.getElementById('calc-deposit-line').innerText = `+ ค่ามัดจำหนังสือ ฿${selectedBook.deposit} (ได้รับคืนเต็มจำนวน)`;
-      document.getElementById('calc-total-round').innerText = `฿${total}`;
-      document.getElementById('label-detail-instant').innerText = `ยืมทันที (฿${total})`;
-    }
-
-    function handleAddToCartFromDetail() {
-      // เช็คว่าผู้ใช้ที่กำลังกดซื้อ เป็นเจ้าของหนังสือเล่มนี้จริงๆ หรือไม่
-      const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
-
-      if (isOwner) { // <--- เปลี่ยนมาเช็คว่าเป็นเจ้าของตัวจริงหรือไม่
-        alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
-        return;
       }
 
-      if (detailMode === 'rent') {
+      function updateRentalCalc() {
         const s = new Date(document.getElementById('input-start-date').value);
         const e = new Date(document.getElementById('input-return-date').value);
-        let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
-        cartRent.push({
-          id: selectedBook.id,
-          title: selectedBook.fullTitle,
-          author: selectedBook.author,
-          days: diff,
-          returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
-          rentFee: diff * selectedBook.rentRate,
-          deposit: selectedBook.deposit,
-          img: selectedBook.img
-        });
-        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
-      } else {
-        cartBuy.push({
-          id: selectedBook.id,
-          title: selectedBook.fullTitle,
-          author: selectedBook.author,
-          tag: 'ซื้อขาดมือสอง จัดส่งทันที',
-          price: selectedBook.buyPrice,
-          origPrice: selectedBook.originalPrice,
-          img: selectedBook.img
-        });
-        alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
+        let diff = Math.max(1, Math.min(30, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1));
+        const rTotal = diff * selectedBook.rentRate;
+        const total = rTotal + selectedBook.deposit;
+        document.getElementById('calc-days-line').innerHTML = `${diff} วัน × ฿${selectedBook.rentRate}/วัน = <span class="text-earth-accent font-bold">฿${rTotal}</span>`;
+        document.getElementById('calc-deposit-line').innerText = `+ ค่ามัดจำหนังสือ ฿${selectedBook.deposit} (ได้รับคืนเต็มจำนวน)`;
+        document.getElementById('calc-total-round').innerText = `฿${total}`;
+        document.getElementById('label-detail-instant').innerText = `ยืมทันที (฿${total})`;
       }
-      saveCarts();
-      updateCartCounters();
-    }
 
-    function handleInstantActionFromDetail() {
-      handleAddToCartFromDetail();
-      showView('cart');
-    }
+      function handleAddToCartFromDetail() {
+        // เช็คว่าผู้ใช้ที่กำลังกดซื้อ เป็นเจ้าของหนังสือเล่มนี้จริงๆ หรือไม่
+        const isOwner = selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username);
 
-    function updateCartCounters() {
-      document.getElementById('badge-rent-count').innerText = `ยืม (${cartRent.length})`;
-      document.getElementById('badge-buy-count').innerText = `ซื้อ (${cartBuy.length})`;
-      document.getElementById('cart-total-badge').innerText = `${cartRent.length + cartBuy.length} รายการในตะกร้า`;
-    }
+        if (isOwner) { // <--- เปลี่ยนมาเช็คว่าเป็นเจ้าของตัวจริงหรือไม่
+          alert('🔒 นี่คือหนังสือของคุณ ดูรายละเอียดได้อย่างเดียว ไม่สามารถเช่าหรือสั่งซื้อได้');
+          return;
+        }
 
-    function renderCart() {
-      updateCartCounters();
-      let subRent = 0, subDep = 0;
-      document.getElementById('cart-rent-list').innerHTML = cartRent.map((item, idx) => {
-        subRent += item.rentFee; subDep += item.deposit;
-        return `
+        if (detailMode === 'rent') {
+          const s = new Date(document.getElementById('input-start-date').value);
+          const e = new Date(document.getElementById('input-return-date').value);
+          let diff = Math.max(1, Math.ceil((e - s) / (1000 * 60 * 60 * 24)) || 1);
+          cartRent.push({
+            id: selectedBook.id,
+            title: selectedBook.fullTitle,
+            author: selectedBook.author,
+            days: diff,
+            returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+            rentFee: diff * selectedBook.rentRate,
+            deposit: selectedBook.deposit,
+            img: selectedBook.img
+          });
+          alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
+        } else {
+          cartBuy.push({
+            id: selectedBook.id,
+            title: selectedBook.fullTitle,
+            author: selectedBook.author,
+            tag: 'ซื้อขาดมือสอง จัดส่งทันที',
+            price: selectedBook.buyPrice,
+            origPrice: selectedBook.originalPrice,
+            img: selectedBook.img
+          });
+          alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
+        }
+        saveCarts();
+        updateCartCounters();
+      }
+
+      function handleInstantActionFromDetail() {
+        handleAddToCartFromDetail();
+        showView('cart');
+      }
+
+      function updateCartCounters() {
+        document.getElementById('badge-rent-count').innerText = `ยืม (${cartRent.length})`;
+        document.getElementById('badge-buy-count').innerText = `ซื้อ (${cartBuy.length})`;
+        document.getElementById('cart-total-badge').innerText = `${cartRent.length + cartBuy.length} รายการในตะกร้า`;
+      }
+
+      function renderCart() {
+        updateCartCounters();
+        let subRent = 0, subDep = 0;
+        document.getElementById('cart-rent-list').innerHTML = cartRent.map((item, idx) => {
+          subRent += item.rentFee; subDep += item.deposit;
+          return `
           <div class="p-3 bg-earth-bg rounded-2xl flex items-center justify-between text-xs sm:text-sm border border-earth-border">
             <div class="flex items-center gap-3">
               <img src="${item.img}" class="w-12 h-16 object-cover rounded-lg"/>
@@ -1490,16 +1503,16 @@
             </div>
           </div>
         `;
-      }).join('') || '<p class="text-xs text-earth-muted py-2">ไม่มีรายการ</p>';
+        }).join('') || '<p class="text-xs text-earth-muted py-2">ไม่มีรายการ</p>';
 
-      document.getElementById('section-a-count').innerText = `${cartRent.length} เล่ม`;
-      document.getElementById('subtotal-rent').innerText = `฿${subRent}`;
-      document.getElementById('deposit-subtotal-text').innerText = `(มัดจำสะสม ฿${subDep})`;
+        document.getElementById('section-a-count').innerText = `${cartRent.length} เล่ม`;
+        document.getElementById('subtotal-rent').innerText = `฿${subRent}`;
+        document.getElementById('deposit-subtotal-text').innerText = `(มัดจำสะสม ฿${subDep})`;
 
-      let subBuy = 0;
-      document.getElementById('cart-buy-list').innerHTML = cartBuy.map((item, idx) => {
-        subBuy += item.price;
-        return `
+        let subBuy = 0;
+        document.getElementById('cart-buy-list').innerHTML = cartBuy.map((item, idx) => {
+          subBuy += item.price;
+          return `
           <div class="p-3 bg-earth-bg rounded-2xl flex items-center justify-between text-xs sm:text-sm border border-earth-border">
             <div class="flex items-center gap-3">
               <img src="${item.img}" class="w-12 h-16 object-cover rounded-lg"/>
@@ -1515,308 +1528,308 @@
             </div>
           </div>
         `;
-      }).join('') || '<p class="text-xs text-earth-muted py-2">ไม่มีรายการ</p>';
+        }).join('') || '<p class="text-xs text-earth-muted py-2">ไม่มีรายการ</p>';
 
-      document.getElementById('section-b-count').innerText = `${cartBuy.length} เล่ม`;
-      document.getElementById('subtotal-buy').innerText = `฿${subBuy}`;
+        document.getElementById('section-b-count').innerText = `${cartBuy.length} เล่ม`;
+        document.getElementById('subtotal-buy').innerText = `฿${subBuy}`;
 
-      const ship = (cartRent.length + cartBuy.length > 0) ? (cartRent.length >= 3 ? 0 : 45) : 0;
-      const total = Math.max(0, subRent + subBuy + subDep + ship - 30);
+        const ship = (cartRent.length + cartBuy.length > 0) ? (cartRent.length >= 3 ? 0 : 45) : 0;
+        const total = Math.max(0, subRent + subBuy + subDep + ship - 30);
 
-      document.getElementById('sum-rent-books').innerText = cartRent.length;
-      document.getElementById('sum-rent-val').innerText = `฿${subRent}`;
-      document.getElementById('sum-buy-books').innerText = cartBuy.length;
-      document.getElementById('sum-buy-val').innerText = `฿${subBuy}`;
-      document.getElementById('sum-deposit-val').innerText = `฿${subDep}`;
-      document.getElementById('sum-shipping-val').innerText = ship === 0 && cartRent.length >= 3 ? 'ฟรี (โปร 3 เล่ม)' : `฿${ship}`;
-      document.getElementById('sum-grand-total').innerText = `฿${total}`;
-      document.getElementById('note-deposit-refund').innerText = `* ยอดนี้รวมเงินมัดจำที่จะได้รับคืน ฿${subDep} เมื่อส่งคืนหนังสือครบ`;
+        document.getElementById('sum-rent-books').innerText = cartRent.length;
+        document.getElementById('sum-rent-val').innerText = `฿${subRent}`;
+        document.getElementById('sum-buy-books').innerText = cartBuy.length;
+        document.getElementById('sum-buy-val').innerText = `฿${subBuy}`;
+        document.getElementById('sum-deposit-val').innerText = `฿${subDep}`;
+        document.getElementById('sum-shipping-val').innerText = ship === 0 && cartRent.length >= 3 ? 'ฟรี (โปร 3 เล่ม)' : `฿${ship}`;
+        document.getElementById('sum-grand-total').innerText = `฿${total}`;
+        document.getElementById('note-deposit-refund').innerText = `* ยอดนี้รวมเงินมัดจำที่จะได้รับคืน ฿${subDep} เมื่อส่งคืนหนังสือครบ`;
 
-      validateCheckoutForm();
-    }
-
-    function validateCheckoutForm() {
-      const btn = document.getElementById('btn-checkout');
-      const addrInput = document.getElementById('checkout-address-input');
-      const addr = addrInput ? addrInput.value.trim() : '';
-
-      // เปลี่ยนมาเช็คว่าตัวแปร currentUser มีค่าอยู่จริงหรือไม่
-      if (!currentUser || addr.length < 10) {
-        btn.disabled = true;
-        btn.className = 'w-full py-4 rounded-2xl bg-earth-muted/50 text-white font-bold text-sm cursor-not-allowed';
-      } else {
-        btn.disabled = false;
-        btn.className = 'w-full py-4 rounded-2xl bg-earth-primary text-white font-bold text-base hover:bg-earth-primary-hover shadow-md transition cursor-pointer';
+        validateCheckoutForm();
       }
-    }
 
-    function performUnifiedCheckout() {
-      const addr = document.getElementById('checkout-address-input').value.trim();
-      document.getElementById('success-order-id').innerText = `BS-${Date.now().toString().slice(-8)}`;
-      document.getElementById('success-user-name').innerText = currentUser.name;
-      document.getElementById('success-address').innerText = addr;
-      document.getElementById('success-total').innerText = document.getElementById('sum-grand-total').innerText;
-      cartRent = [];
-      cartBuy = [];
-      updateCartCounters();
-      showView('success');
-    }
-    // ===================== ระบบล็อกอิน / สมัครสมาชิก / Guest =====================
-    let authMode = 'login';
+      function validateCheckoutForm() {
+        const btn = document.getElementById('btn-checkout');
+        const addrInput = document.getElementById('checkout-address-input');
+        const addr = addrInput ? addrInput.value.trim() : '';
 
-    function switchAuthTab(mode) {
-      authMode = mode;
-      const isLogin = mode === 'login';
-      document.getElementById('tab-login').className =
-        'py-2 rounded-full text-sm font-bold transition ' + (isLogin ? 'bg-earth-primary text-white' : 'text-earth-muted');
-      document.getElementById('tab-register').className =
-        'py-2 rounded-full text-sm font-bold transition ' + (!isLogin ? 'bg-earth-primary text-white' : 'text-earth-muted');
-      document.getElementById('auth-title').innerText = isLogin ? 'ยินดีต้อนรับกลับมา' : 'สร้างบัญชีสมาชิกใหม่';
-      document.getElementById('auth-subtitle').innerText = isLogin
-        ? 'กรอกข้อมูลบัญชีเพื่อเข้าสู่ระบบ'
-        : 'กรอกชื่อบัญชีผู้ใช้และรหัสผ่านเพื่อสมัครสมาชิก';
-      document.getElementById('auth-confirm-row').classList.toggle('hidden', isLogin);
-      document.getElementById('auth-remember-row').classList.toggle('hidden', !isLogin);
-      document.getElementById('auth-forgot').classList.toggle('hidden', !isLogin);
-      document.getElementById('auth-submit-btn').innerHTML = isLogin
-        ? 'เข้าสู่ระบบ (Sign In) <span class="material-symbols-outlined text-base">arrow_forward</span>'
-        : 'สมัครสมาชิก (Sign Up) <span class="material-symbols-outlined text-base">person_add</span>';
-      document.getElementById('auth-switch-text').innerHTML = isLogin
-        ? 'ยังไม่มีบัญชี? <button type="button" onclick="switchAuthTab(\'register\')" class="text-earth-accent font-bold">สมัครสมาชิก</button>'
-        : 'มีบัญชีอยู่แล้ว? <button type="button" onclick="switchAuthTab(\'login\')" class="text-earth-accent font-bold">เข้าสู่ระบบ</button>';
-    }
+        // เปลี่ยนมาเช็คว่าตัวแปร currentUser มีค่าอยู่จริงหรือไม่
+        if (!currentUser || addr.length < 10) {
+          btn.disabled = true;
+          btn.className = 'w-full py-4 rounded-2xl bg-earth-muted/50 text-white font-bold text-sm cursor-not-allowed';
+        } else {
+          btn.disabled = false;
+          btn.className = 'w-full py-4 rounded-2xl bg-earth-primary text-white font-bold text-base hover:bg-earth-primary-hover shadow-md transition cursor-pointer';
+        }
+      }
 
-    function toggleAuthPassword() {
-      const pw = document.getElementById('auth-password');
-      const eye = document.getElementById('pw-eye');
-      if (pw.type === 'password') { pw.type = 'text'; eye.innerText = 'visibility_off'; }
-      else { pw.type = 'password'; eye.innerText = 'visibility'; }
-    }
+      function performUnifiedCheckout() {
+        const addr = document.getElementById('checkout-address-input').value.trim();
+        document.getElementById('success-order-id').innerText = `BS-${Date.now().toString().slice(-8)}`;
+        document.getElementById('success-user-name').innerText = currentUser.name;
+        document.getElementById('success-address').innerText = addr;
+        document.getElementById('success-total').innerText = document.getElementById('sum-grand-total').innerText;
+        cartRent = [];
+        cartBuy = [];
+        updateCartCounters();
+        showView('success');
+      }
+      // ===================== ระบบล็อกอิน / สมัครสมาชิก / Guest =====================
+      let authMode = 'login';
 
-    function handleAuthSubmit(e) {
-      e.preventDefault();
-      const uname = document.getElementById('auth-username').value.trim();
-      const pw = document.getElementById('auth-password').value;
-      if (!uname || !pw) { alert('กรุณากรอกชื่อบัญชีผู้ใช้และรหัสผ่าน'); return; }
+      function switchAuthTab(mode) {
+        authMode = mode;
+        const isLogin = mode === 'login';
+        document.getElementById('tab-login').className =
+          'py-2 rounded-full text-sm font-bold transition ' + (isLogin ? 'bg-earth-primary text-white' : 'text-earth-muted');
+        document.getElementById('tab-register').className =
+          'py-2 rounded-full text-sm font-bold transition ' + (!isLogin ? 'bg-earth-primary text-white' : 'text-earth-muted');
+        document.getElementById('auth-title').innerText = isLogin ? 'ยินดีต้อนรับกลับมา' : 'สร้างบัญชีสมาชิกใหม่';
+        document.getElementById('auth-subtitle').innerText = isLogin
+          ? 'กรอกข้อมูลบัญชีเพื่อเข้าสู่ระบบ'
+          : 'กรอกชื่อบัญชีผู้ใช้และรหัสผ่านเพื่อสมัครสมาชิก';
+        document.getElementById('auth-confirm-row').classList.toggle('hidden', isLogin);
+        document.getElementById('auth-remember-row').classList.toggle('hidden', !isLogin);
+        document.getElementById('auth-forgot').classList.toggle('hidden', !isLogin);
+        document.getElementById('auth-submit-btn').innerHTML = isLogin
+          ? 'เข้าสู่ระบบ (Sign In) <span class="material-symbols-outlined text-base">arrow_forward</span>'
+          : 'สมัครสมาชิก (Sign Up) <span class="material-symbols-outlined text-base">person_add</span>';
+        document.getElementById('auth-switch-text').innerHTML = isLogin
+          ? 'ยังไม่มีบัญชี? <button type="button" onclick="switchAuthTab(\'register\')" class="text-earth-accent font-bold">สมัครสมาชิก</button>'
+          : 'มีบัญชีอยู่แล้ว? <button type="button" onclick="switchAuthTab(\'login\')" class="text-earth-accent font-bold">เข้าสู่ระบบ</button>';
+      }
 
-      if (authMode === 'register') {
-        const pw2 = document.getElementById('auth-password2').value;
-        if (pw !== pw2) { alert('รหัสผ่านยืนยันไม่ตรงกัน กรุณาลองใหม่อีกครั้ง'); return; }
-        if (accounts[uname]) { alert('ชื่อบัญชีนี้ถูกใช้งานแล้ว กรุณาใช้ชื่อบัญชีอื่น'); return; }
-        accounts[uname] = { password: pw, name: uname, createdAt: new Date().toISOString() };
-        saveAccounts();
-        alert('🎉 สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบด้วยบัญชีที่สร้างไว้');
-        document.getElementById('auth-password').value = '';
-        document.getElementById('auth-password2').value = '';
+      function toggleAuthPassword() {
+        const pw = document.getElementById('auth-password');
+        const eye = document.getElementById('pw-eye');
+        if (pw.type === 'password') { pw.type = 'text'; eye.innerText = 'visibility_off'; }
+        else { pw.type = 'password'; eye.innerText = 'visibility'; }
+      }
+
+      function handleAuthSubmit(e) {
+        e.preventDefault();
+        const uname = document.getElementById('auth-username').value.trim();
+        const pw = document.getElementById('auth-password').value;
+        if (!uname || !pw) { alert('กรุณากรอกชื่อบัญชีผู้ใช้และรหัสผ่าน'); return; }
+
+        if (authMode === 'register') {
+          const pw2 = document.getElementById('auth-password2').value;
+          if (pw !== pw2) { alert('รหัสผ่านยืนยันไม่ตรงกัน กรุณาลองใหม่อีกครั้ง'); return; }
+          if (accounts[uname]) { alert('ชื่อบัญชีนี้ถูกใช้งานแล้ว กรุณาใช้ชื่อบัญชีอื่น'); return; }
+          accounts[uname] = { password: pw, name: uname, createdAt: new Date().toISOString() };
+          saveAccounts();
+          alert('🎉 สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบด้วยบัญชีที่สร้างไว้');
+          document.getElementById('auth-password').value = '';
+          document.getElementById('auth-password2').value = '';
+          switchAuthTab('login');
+        } else {
+          const acc = accounts[uname];
+          if (!acc || acc.password !== pw) { alert('ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่'); return; }
+          doLogin(uname, acc);
+        }
+      }
+
+      function doLogin(uname, acc) {
+        currentUser = { username: uname, name: acc.name || uname };
+        localStorage.setItem('bs_session', JSON.stringify(currentUser));
+        loadCarts();
+        loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อดึงหนังสือเฉพาะของบัญชีที่เพิ่งล็อกอิน
+        updateAuthUI();
+        updateCartCounters();
+        renderBooks();
+        alert('ยินดีต้อนรับ ' + currentUser.name + '! เข้าสู่ระบบเรียบร้อยแล้ว');
+        showView('home');
+      }
+
+      function logout() {
+        if (!currentUser) return;
+        if (!confirm('ต้องการออกจากระบบ?')) return;
+        currentUser = null;
+        localStorage.removeItem('bs_session');
+        cartRent = []; cartBuy = [];
+        loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อล้าง/โหลดหนังสือของผู้เยี่ยมชม (Guest)
+        updateAuthUI();
+        updateCartCounters();
+        renderBooks();
         switchAuthTab('login');
-      } else {
-        const acc = accounts[uname];
-        if (!acc || acc.password !== pw) { alert('ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่'); return; }
-        doLogin(uname, acc);
+        showView('auth');
       }
-    }
 
-    function doLogin(uname, acc) {
-      currentUser = { username: uname, name: acc.name || uname };
-      localStorage.setItem('bs_session', JSON.stringify(currentUser));
-      loadCarts();
-      loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อดึงหนังสือเฉพาะของบัญชีที่เพิ่งล็อกอิน
-      updateAuthUI();
-      updateCartCounters();
-      renderBooks();
-      alert('ยินดีต้อนรับ ' + currentUser.name + '! เข้าสู่ระบบเรียบร้อยแล้ว');
-      showView('home');
-    }
+      function enterGuestMode() {
+        currentUser = null;
+        cartRent = []; cartBuy = [];
+        updateAuthUI();
+        updateCartCounters();
+        renderBooks();
+        alert('👋 เข้าชมแบบผู้เยี่ยมชม (Guest)\nคุณสามารถดูรายละเอียดหนังสือได้ แต่ต้องเข้าสู่ระบบหรือสมัครสมาชิกก่อนการซื้อ/เช่า/ลงขาย');
+        showView('home');
+      }
 
-    function logout() {
-      if (!currentUser) return;
-      if (!confirm('ต้องการออกจากระบบ?')) return;
-      currentUser = null;
-      localStorage.removeItem('bs_session');
-      cartRent = []; cartBuy = [];
-      loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อล้าง/โหลดหนังสือของผู้เยี่ยมชม (Guest)
-      updateAuthUI();
-      updateCartCounters();
-      renderBooks();
-      switchAuthTab('login');
-      showView('auth');
-    }
+      // Seller Logic (Images 1 & 2)
+      function updateConditionPreview(val) {
+        let text = '95% ดีเยี่ยม (เหมือนใหม่)';
+        if (val <= 75) text = '70% เก่าเก็บ/มีรอย';
+        else if (val <= 85) text = '85% ปานกลาง';
+        else if (val <= 95) text = '95% ดีมาก';
+        else text = '100% มือหนึ่ง';
+        document.getElementById('add-condition-badge').innerText = text;
+      }
 
-    function enterGuestMode() {
-      currentUser = null;
-      cartRent = []; cartBuy = [];
-      updateAuthUI();
-      updateCartCounters();
-      renderBooks();
-      alert('👋 เข้าชมแบบผู้เยี่ยมชม (Guest)\nคุณสามารถดูรายละเอียดหนังสือได้ แต่ต้องเข้าสู่ระบบหรือสมัครสมาชิกก่อนการซื้อ/เช่า/ลงขาย');
-      showView('home');
-    }
+      function previewUploadedImages(event) {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) return;
+        uploadedImageData = [];
+        const preview = document.getElementById('uploaded-image-preview');
+        preview.innerHTML = '';
+        files.slice(0, 6).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            uploadedImageData.push(e.target.result);
+            preview.appendChild(makePreviewThumb(e.target.result, uploadedImageData.length - 1));
+          };
+          reader.readAsDataURL(file);
+        });
+      }
 
-    // Seller Logic (Images 1 & 2)
-    function updateConditionPreview(val) {
-      let text = '95% ดีเยี่ยม (เหมือนใหม่)';
-      if (val <= 75) text = '70% เก่าเก็บ/มีรอย';
-      else if (val <= 85) text = '85% ปานกลาง';
-      else if (val <= 95) text = '95% ดีมาก';
-      else text = '100% มือหนึ่ง';
-      document.getElementById('add-condition-badge').innerText = text;
-    }
-
-    function previewUploadedImages(event) {
-      const files = Array.from(event.target.files || []);
-      if (!files.length) return;
-      uploadedImageData = [];
-      const preview = document.getElementById('uploaded-image-preview');
-      preview.innerHTML = '';
-      files.slice(0, 6).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          uploadedImageData.push(e.target.result);
-          preview.appendChild(makePreviewThumb(e.target.result, uploadedImageData.length - 1));
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function makePreviewThumb(src, idx) {
-      const div = document.createElement('div');
-      div.className = 'relative rounded-xl overflow-hidden border border-earth-border aspect-[3/4] bg-earth-bg';
-      div.innerHTML = `<img src="${src}" class="w-full h-full object-cover"/>
+      function makePreviewThumb(src, idx) {
+        const div = document.createElement('div');
+        div.className = 'relative rounded-xl overflow-hidden border border-earth-border aspect-[3/4] bg-earth-bg';
+        div.innerHTML = `<img src="${src}" class="w-full h-full object-cover"/>
         <button onclick="removeUploadedImage(${idx})" title="ลบรูป" class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-500">×</button>`;
-      return div;
-    }
-
-    function removeUploadedImage(idx) {
-      uploadedImageData.splice(idx, 1);
-      const preview = document.getElementById('uploaded-image-preview');
-      preview.innerHTML = '';
-      uploadedImageData.forEach((src, i) => preview.appendChild(makePreviewThumb(src, i)));
-    }
-
-    function resetSellerForm() {
-      document.getElementById('add-b-title').value = '';
-      document.getElementById('add-b-author').value = '';
-      document.getElementById('add-b-isbn').value = '';
-      document.getElementById('add-b-sale').value = '200';
-      document.getElementById('add-b-rent').value = '5';
-      document.getElementById('add-b-deposit').value = '150';
-      const fileInput = document.getElementById('add-b-images');
-      if (fileInput) fileInput.value = '';
-      uploadedImageData = [];
-      const preview = document.getElementById('uploaded-image-preview');
-      if (preview) preview.innerHTML = '';
-      const slider = document.querySelector('#view-seller-add input[type="range"]');
-      if (slider) slider.value = '95';
-      updateConditionPreview('95');
-    }
-    function handleSaveNewBook() {
-      const newBook = {
-        id: books.length + 1,
-        title: document.getElementById('add-b-title').value,
-        author: document.getElementById('add-b-author').value,
-        category: document.getElementById('add-b-cat').value,
-        buy_price: parseFloat(document.getElementById('add-b-sale').value),
-        rent_price: parseFloat(document.getElementById('add-b-rent').value),
-        is_my_book: true, // <--- บรรทัดสำคัญ! ระบุว่าเป็นหนังสือของผู้ใช้[cite: 4, 5]
-        // ... ฟิลด์อื่น ๆ[cite: 4, 5]
-      };
-
-      books.unshift(newBook);
-
-      // สลับหมวดหมู่และแสดงผลหน้าแรก[cite: 4, 5]
-      currentCategory = "📘 หนังสือของคุณ";
-      showView('home');
-      renderBooks();
-    }
-
-    function handleSaveNewBook() {
-      const title = document.getElementById('add-b-title').value.trim();
-      const author = document.getElementById('add-b-author').value.trim();
-      const isbn = document.getElementById('add-b-isbn').value.trim();
-      const cat = document.getElementById('add-b-cat').value;
-      const sale = parseInt(document.getElementById('add-b-sale').value) || 0;
-      const rent = parseInt(document.getElementById('add-b-rent').value) || 0;
-      const dep = parseInt(document.getElementById('add-b-deposit').value) || 0;
-      const lType = document.querySelector('input[name="listing_type"]:checked')?.value || 'ได้ทั้งเช่าและขาย ★';
-      const condText = document.getElementById('add-condition-badge').innerText;
-
-      if (!title || !author) {
-        alert('กรุณากรอกชื่อหนังสือและผู้แต่ง');
-        return;
+        return div;
       }
-      if (uploadedImageData.length === 0) {
-        alert('กรุณาอัปโหลดรูปภาพหนังสืออย่างน้อย 1 รูป');
-        return;
-      }
-      if (!currentUser) {
-        alert('กรุณาเข้าสู่ระบบก่อนลงทะเบียนหนังสือ');
-        return;
-      }
-      myBooks.unshift({
-        id: 1000 + Date.now() % 100000,
-        title: title,
-        fullTitle: title,
-        author: author,
-        category: cat,
-        isbn: isbn || 'ไม่ระบุ',
-        status: 'my_book',
-        statusText: '📘 หนังสือของคุณ',
-        condition: condText.split(' ')[0],
-        conditionFull: condText,
-        buyPrice: sale,
-        originalPrice: sale + 50,
-        rentRate: rent,
-        deposit: dep,
-        img: uploadedImageData[0],
-        desc: `หนังสือที่คุณลงทะเบียนเข้าระบบ (${lType})`,
-        seller: currentUser ? currentUser.name : 'คุณมีนา',
-        owner: currentUser ? currentUser.username : 'guest',
-        rating: '5.0 (เจ้าของหนังสือ)',
-        thumbnails: uploadedImageData.slice(0, 3),
-        isMyBook: true
-      });
 
-      saveBooks(); // <--- เรียกใช้เพื่อบันทึกหนังสือใส่คีย์ของบัญชีตนเองถาวร
-      function deleteMyBook(index) {
-        myBooks.splice(index, 1);
-        saveBooks(); // <--- อัปเดตข้อมูลถาวรหลังลบ
+      function removeUploadedImage(idx) {
+        uploadedImageData.splice(idx, 1);
+        const preview = document.getElementById('uploaded-image-preview');
+        preview.innerHTML = '';
+        uploadedImageData.forEach((src, i) => preview.appendChild(makePreviewThumb(src, i)));
+      }
+
+      function resetSellerForm() {
+        document.getElementById('add-b-title').value = '';
+        document.getElementById('add-b-author').value = '';
+        document.getElementById('add-b-isbn').value = '';
+        document.getElementById('add-b-sale').value = '200';
+        document.getElementById('add-b-rent').value = '5';
+        document.getElementById('add-b-deposit').value = '150';
+        const fileInput = document.getElementById('add-b-images');
+        if (fileInput) fileInput.value = '';
+        uploadedImageData = [];
+        const preview = document.getElementById('uploaded-image-preview');
+        if (preview) preview.innerHTML = '';
+        const slider = document.querySelector('#view-seller-add input[type="range"]');
+        if (slider) slider.value = '95';
+        updateConditionPreview('95');
+      }
+      function handleSaveNewBook() {
+        const newBook = {
+          id: books.length + 1,
+          title: document.getElementById('add-b-title').value,
+          author: document.getElementById('add-b-author').value,
+          category: document.getElementById('add-b-cat').value,
+          buy_price: parseFloat(document.getElementById('add-b-sale').value),
+          rent_price: parseFloat(document.getElementById('add-b-rent').value),
+          is_my_book: true, // <--- บรรทัดสำคัญ! ระบุว่าเป็นหนังสือของผู้ใช้[cite: 4, 5]
+          // ... ฟิลด์อื่น ๆ[cite: 4, 5]
+        };
+
+        books.unshift(newBook);
+
+        // สลับหมวดหมู่และแสดงผลหน้าแรก[cite: 4, 5]
+        currentCategory = "📘 หนังสือของคุณ";
+        showView('home');
         renderBooks();
       }
 
-      alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! ไปดูได้ที่หมวด "📘 หนังสือของคุณ"`);
+      function handleSaveNewBook() {
+        const title = document.getElementById('add-b-title').value.trim();
+        const author = document.getElementById('add-b-author').value.trim();
+        const isbn = document.getElementById('add-b-isbn').value.trim();
+        const cat = document.getElementById('add-b-cat').value;
+        const sale = parseInt(document.getElementById('add-b-sale').value) || 0;
+        const rent = parseInt(document.getElementById('add-b-rent').value) || 0;
+        const dep = parseInt(document.getElementById('add-b-deposit').value) || 0;
+        const lType = document.querySelector('input[name="listing_type"]:checked')?.value || 'ได้ทั้งเช่าและขาย ★';
+        const condText = document.getElementById('add-condition-badge').innerText;
 
-      activeCategory = '📘 หนังสือของคุณ';
-      renderCategories();
-      renderBooks();
-      showView('home');
-    }
+        if (!title || !author) {
+          alert('กรุณากรอกชื่อหนังสือและผู้แต่ง');
+          return;
+        }
+        if (uploadedImageData.length === 0) {
+          alert('กรุณาอัปโหลดรูปภาพหนังสืออย่างน้อย 1 รูป');
+          return;
+        }
+        if (!currentUser) {
+          alert('กรุณาเข้าสู่ระบบก่อนลงทะเบียนหนังสือ');
+          return;
+        }
+        myBooks.unshift({
+          id: 1000 + Date.now() % 100000,
+          title: title,
+          fullTitle: title,
+          author: author,
+          category: cat,
+          isbn: isbn || 'ไม่ระบุ',
+          status: 'my_book',
+          statusText: '📘 หนังสือของคุณ',
+          condition: condText.split(' ')[0],
+          conditionFull: condText,
+          buyPrice: sale,
+          originalPrice: sale + 50,
+          rentRate: rent,
+          deposit: dep,
+          img: uploadedImageData[0],
+          desc: `หนังสือที่คุณลงทะเบียนเข้าระบบ (${lType})`,
+          seller: currentUser ? currentUser.name : 'คุณมีนา',
+          owner: currentUser ? currentUser.username : 'guest',
+          rating: '5.0 (เจ้าของหนังสือ)',
+          thumbnails: uploadedImageData.slice(0, 3),
+          isMyBook: true
+        });
 
-    function renderShelf() {
-      if (!currentUser) return;
+        saveBooks(); // <--- เรียกใช้เพื่อบันทึกหนังสือใส่คีย์ของบัญชีตนเองถาวร
+        function deleteMyBook(index) {
+          myBooks.splice(index, 1);
+          saveBooks(); // <--- อัปเดตข้อมูลถาวรหลังลบ
+          renderBooks();
+        }
 
-      // 1. เปลี่ยนชื่อร้านค้าตามบัญชีที่ล็อกอินอยู่
-      const storeTitle = document.querySelector('#view-seller-shelf h2');
-      if (storeTitle) {
-        storeTitle.innerText = `ร้านหนังสือของ${currentUser.name} (${currentUser.username}'s Shelf)`;
+        alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! ไปดูได้ที่หมวด "📘 หนังสือของคุณ"`);
+
+        activeCategory = '📘 หนังสือของคุณ';
+        renderCategories();
+        renderBooks();
+        showView('home');
       }
 
-      // 2. กรองเฉพาะหนังสือที่เป็นของบัญชีนี้
-      const userBooks = myBooks.filter(b => b.owner === currentUser.username);
+      function renderShelf() {
+        if (!currentUser) return;
 
-      document.getElementById('shelf-total-badge').innerText = `หนังสือทั้งหมดในคลัง: ${userBooks.length} เล่ม`;
-      const tbody = document.getElementById('shelf-books-tbody');
+        // 1. เปลี่ยนชื่อร้านค้าตามบัญชีที่ล็อกอินอยู่
+        const storeTitle = document.querySelector('#view-seller-shelf h2');
+        if (storeTitle) {
+          storeTitle.innerText = `ร้านหนังสือของ${currentUser.name} (${currentUser.username}'s Shelf)`;
+        }
 
-      if (userBooks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-earth-muted">ยังไม่มีรายการหนังสือที่คุณลงไว้</td></tr>`;
-        return;
-      }
+        // 2. กรองเฉพาะหนังสือที่เป็นของบัญชีนี้
+        const userBooks = myBooks.filter(b => b.owner === currentUser.username);
 
-      // 3. แสดงรายการหนังสือ พร้อมปุ่มลบหนังสือ
-      tbody.innerHTML = userBooks.map((b) => {
-        // หาตำแหน่ง index จริงใน myBooks เพื่อใช้ลบ
-        const realIndex = myBooks.findIndex(item => item.id === b.id);
+        document.getElementById('shelf-total-badge').innerText = `หนังสือทั้งหมดในคลัง: ${userBooks.length} เล่ม`;
+        const tbody = document.getElementById('shelf-books-tbody');
 
-        return `
+        if (userBooks.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-earth-muted">ยังไม่มีรายการหนังสือที่คุณลงไว้</td></tr>`;
+          return;
+        }
+
+        // 3. แสดงรายการหนังสือ พร้อมปุ่มลบหนังสือ
+        tbody.innerHTML = userBooks.map((b) => {
+          // หาตำแหน่ง index จริงใน myBooks เพื่อใช้ลบ
+          const realIndex = myBooks.findIndex(item => item.id === b.id);
+
+          return `
       <tr class="hover:bg-earth-bg/60 transition">
         <td class="py-3 px-2">
           <div class="flex items-center gap-3">
@@ -1848,45 +1861,45 @@
         </td>
       </tr>
     `;
-      }).join('');
-    }
+        }).join('');
+      }
 
-    // ฟังก์ชันสำหรับลบหนังสือออกจากคลัง
-    function deleteBookFromShelf(index) {
-      if (confirm('คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?')) {
-        myBooks.splice(index, 1);
-        saveBooks();
-        renderShelf();
+      // ฟังก์ชันสำหรับลบหนังสือออกจากคลัง
+      function deleteBookFromShelf(index) {
+        if (confirm('คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?')) {
+          myBooks.splice(index, 1);
+          saveBooks();
+          renderShelf();
+          renderBooks();
+          alert('ลบรายการหนังสือเรียบร้อยแล้ว');
+        }
+      }
+
+      function openLoginModal() { openModal('login-modal'); }
+      function handleLoginSubmit(e) {
+        e.preventDefault();
+        currentUser.name = document.getElementById('login-name-input').value;
+        currentUser.phone = document.getElementById('login-phone-input').value;
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        document.getElementById('auth-user-name').innerText = currentUser.name;
+        document.getElementById('auth-user-phone').innerText = currentUser.phone;
+        closeModal('login-modal');
+        validateCheckoutForm();
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        // หากมีเซสชันค้างอยู่ ให้ดึงcurrentUser ขึ้นมาก่อน
+        const savedSession = localStorage.getItem('bs_session');
+        if (savedSession) {
+          try { currentUser = JSON.parse(savedSession); } catch (e) { }
+        }
+
+        loadBooks(); // <--- ดึงหนังสือของบัญชีที่ล็อกอินค้างไว้
+        updateAuthUI();
+        renderCategories();
         renderBooks();
-        alert('ลบรายการหนังสือเรียบร้อยแล้ว');
-      }
-    }
-
-    function openLoginModal() { openModal('login-modal'); }
-    function handleLoginSubmit(e) {
-      e.preventDefault();
-      currentUser.name = document.getElementById('login-name-input').value;
-      currentUser.phone = document.getElementById('login-phone-input').value;
-      document.getElementById('user-display-name').innerText = currentUser.name;
-      document.getElementById('auth-user-name').innerText = currentUser.name;
-      document.getElementById('auth-user-phone').innerText = currentUser.phone;
-      closeModal('login-modal');
-      validateCheckoutForm();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      // หากมีเซสชันค้างอยู่ ให้ดึงcurrentUser ขึ้นมาก่อน
-      const savedSession = localStorage.getItem('bs_session');
-      if (savedSession) {
-        try { currentUser = JSON.parse(savedSession); } catch (e) { }
-      }
-
-      loadBooks(); // <--- ดึงหนังสือของบัญชีที่ล็อกอินค้างไว้
-      updateAuthUI();
-      renderCategories();
-      renderBooks();
-      updateCartCounters();
-    });
+        updateCartCounters();
+      });
   </script>
 </body>
 
