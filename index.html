@@ -79,17 +79,16 @@
         </div>
       </div>
 
-      <!-- Search Input -->
-      <div class="relative hidden md:block w-72 lg:w-96">
+      <!-- ปรับลดความกว้างลงเพื่อเพิ่มพื้นที่ให้เมนูด้านขวา -->
+      <div class="relative hidden md:block w-48 lg:w-64">
         <span
           class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-earth-muted text-lg">search</span>
-        <input type="search" id="header-search" oninput="filterBooks()"
-          placeholder="ค้นหาชื่อหนังสือ, ผู้แต่ง, หมวดหมู่..."
-          class="w-full pl-9 pr-4 py-2 bg-white rounded-full text-sm border border-earth-border focus:outline-none focus:ring-2 focus:ring-earth-accent transition" />
+        <input type="search" id="header-search" oninput="filterBooks()" placeholder="ค้นหาชื่อหนังสือ..."
+          class="w-full pl-9 pr-3 py-1.5 bg-white rounded-full text-xs border border-earth-border focus:outline-none focus:ring-2 focus:ring-earth-accent transition" />
       </div>
 
       <!-- Navigation Links -->
-      <nav class="hidden lg:flex items-center gap-6 font-medium text-sm">
+      <nav class="hidden xl:flex items-center gap-3 font-medium text-xs whitespace-nowrap">
         <button onclick="showView('home')"
           class="text-earth-primary font-bold hover:text-earth-accent transition">หน้าแรก</button>
         <button onclick="showView('home')"
@@ -101,45 +100,34 @@
       </nav>
 
       <!-- Cart Counters & User Profile -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 shrink-0">
         <!-- ยืม Cart Badge -->
         <button onclick="showView('cart')"
-          class="relative py-2 px-3 rounded-full bg-earth-sage-light text-earth-sage-dark border border-earth-sage/30 hover:bg-earth-sage/20 transition flex items-center gap-1.5 shadow-sm">
-          <span class="material-symbols-outlined text-lg">auto_stories</span>
-          <span class="text-xs font-bold" id="badge-rent-count">ยืม (2)</span>
+          class="relative py-1.5 px-2.5 rounded-full bg-earth-sage-light text-earth-sage-dark border border-earth-sage/30 hover:bg-earth-sage/20 transition flex items-center gap-1 shadow-sm whitespace-nowrap">
+          <span class="material-symbols-outlined text-base">auto_stories</span>
+          <span class="text-[11px] font-bold" id="badge-rent-count">ยืม (0)</span>
         </button>
 
         <!-- ซื้อ Cart Badge -->
         <button onclick="showView('cart')"
-          class="relative py-2 px-3 rounded-full bg-earth-accent/15 text-earth-accent-hover border border-earth-accent/30 hover:bg-earth-accent/25 transition flex items-center gap-1.5 shadow-sm">
-          <span class="material-symbols-outlined text-lg">shopping_bag</span>
-          <span class="text-xs font-bold" id="badge-buy-count">ซื้อ (1)</span>
+          class="relative py-1.5 px-2.5 rounded-full bg-earth-accent/15 text-earth-accent-hover border border-earth-accent/30 hover:bg-earth-accent/25 transition flex items-center gap-1 shadow-sm whitespace-nowrap">
+          <span class="material-symbols-outlined text-base">shopping_bag</span>
+          <span class="text-[11px] font-bold" id="badge-buy-count">ซื้อ (0)</span>
         </button>
 
-        <!-- User Profile Pill -->
-        <div id="user-profile-widget" class="flex items-center gap-2 pl-2 border-l border-earth-border">
-          <!-- ยังไม่ล็อกอิน: แสดงปุ่มเข้าสู่ระบบ -->
-          <div id="user-logged-out" class="flex items-center gap-2">
-            <button onclick="switchAuthTab('login'); showView('auth')"
-              class="px-4 py-2 rounded-full bg-earth-primary text-white text-xs font-bold hover:bg-earth-primary-hover transition shadow-sm flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-base">login</span> เข้าสู่ระบบ
-            </button>
-          </div>
-          <!-- ล็อกอินแล้ว: แสดงชื่อบัญชี + ปุ่มออกจากระบบ -->
-          <div id="user-logged-in" class="hidden items-center gap-2">
+        <!-- User Profile Widget -->
+        <div id="user-profile-widget" class="flex items-center gap-1.5 pl-1.5 border-l border-earth-border">
+          <div id="user-logged-in" class="flex items-center gap-1.5">
             <div
-              class="w-9 h-9 rounded-full bg-earth-secondary flex items-center justify-center font-cute font-bold text-earth-primary border border-earth-border"
-              id="user-avatar">?</div>
-            <div class="hidden sm:flex flex-col text-left">
-              <span class="text-xs font-bold leading-tight" id="user-display-name">ผู้เยี่ยมชม</span>
-              <span class="text-[10px] text-earth-sage-dark font-medium flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-earth-sage inline-block"></span>
-                <span id="user-tier-text">ยังไม่ได้เข้าสู่ระบบ</span>
-              </span>
+              class="w-8 h-8 rounded-full bg-earth-secondary flex items-center justify-center font-cute font-bold text-xs text-earth-primary border border-earth-border shrink-0"
+              id="user-avatar">P</div>
+            <div class="hidden sm:flex flex-col text-left leading-tight">
+              <span class="text-xs font-bold truncate max-w-[80px]" id="user-display-name">Pk</span>
+              <span class="text-[9px] text-earth-sage-dark font-medium" id="user-tier-text">สมาชิก</span>
             </div>
             <button onclick="logout()" title="ออกจากระบบ"
-              class="p-1.5 rounded-full text-earth-muted hover:text-red-500 hover:bg-red-50 transition">
-              <span class="material-symbols-outlined text-base">logout</span>
+              class="p-1 rounded-full text-earth-muted hover:text-red-500 hover:bg-red-50 transition">
+              <span class="material-symbols-outlined text-sm">logout</span>
             </button>
           </div>
         </div>
