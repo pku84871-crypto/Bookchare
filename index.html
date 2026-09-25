@@ -117,7 +117,17 @@
 
         <!-- User Profile Widget -->
         <div id="user-profile-widget" class="flex items-center gap-1.5 pl-1.5 border-l border-earth-border">
-          <div id="user-logged-in" class="flex items-center gap-1.5">
+
+          <!-- แสดงเมื่อยังไม่ได้เข้าสู่ระบบ -->
+          <div id="user-logged-out" class="flex items-center gap-2">
+            <button onclick="switchAuthTab('login'); showView('auth');"
+              class="px-3 py-1.5 rounded-full bg-earth-primary text-white text-xs font-bold hover:bg-earth-primary-hover transition">
+              เข้าสู่ระบบ
+            </button>
+          </div>
+
+          <!-- แสดงเมื่อเข้าสู่ระบบแล้ว -->
+          <div id="user-logged-in" class="hidden flex items-center gap-1.5">
             <div
               class="w-8 h-8 rounded-full bg-earth-secondary flex items-center justify-center font-cute font-bold text-xs text-earth-primary border border-earth-border shrink-0"
               id="user-avatar">P</div>
@@ -130,6 +140,7 @@
               <span class="material-symbols-outlined text-sm">logout</span>
             </button>
           </div>
+
         </div>
       </div>
 
@@ -1765,6 +1776,7 @@
           alert('กรุณาเข้าสู่ระบบก่อนลงทะเบียนหนังสือ');
           return;
         }
+
         myBooks.unshift({
           id: 1000 + Date.now() % 100000,
           title: title,
@@ -1782,19 +1794,14 @@
           deposit: dep,
           img: uploadedImageData[0],
           desc: `หนังสือที่คุณลงทะเบียนเข้าระบบ (${lType})`,
-          seller: currentUser ? currentUser.name : 'คุณมีนา',
+          seller: currentUser ? currentUser.name : 'สมาชิก',
           owner: currentUser ? currentUser.username : 'guest',
           rating: '5.0 (เจ้าของหนังสือ)',
           thumbnails: uploadedImageData.slice(0, 3),
           isMyBook: true
         });
 
-        saveBooks(); // <--- เรียกใช้เพื่อบันทึกหนังสือใส่คีย์ของบัญชีตนเองถาวร
-        function deleteMyBook(index) {
-          myBooks.splice(index, 1);
-          saveBooks(); // <--- อัปเดตข้อมูลถาวรหลังลบ
-          renderBooks();
-        }
+        saveBooks(); // บันทึกลง localStorage
 
         alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! ไปดูได้ที่หมวด "📘 หนังสือของคุณ"`);
 
