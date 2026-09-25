@@ -1342,7 +1342,7 @@
       document.getElementById('detail-rent-rate').innerText = `฿${selectedBook.rentRate} /วัน`;
       document.getElementById('detail-buy-price').innerText = `฿${selectedBook.buyPrice}`;
       document.getElementById('detail-original-price').innerText = `฿${selectedBook.originalPrice}`;
-      document.getElementById('btn-seller-shelf').onclick = function() { filterBySeller(selectedBook.owner); };
+      document.getElementById('btn-seller-shelf').onclick = function () { filterBySeller(selectedBook.owner); };
 
       const tBox = document.getElementById('detail-thumbnails');
       tBox.innerHTML = (selectedBook.thumbnails || [selectedBook.img]).map(t =>
@@ -1544,8 +1544,11 @@
 
     function validateCheckoutForm() {
       const btn = document.getElementById('btn-checkout');
-      const addr = document.getElementById('checkout-address-input').value.trim();
-      if (!currentUser.isLoggedIn || addr.length < 10) {
+      const addrInput = document.getElementById('checkout-address-input');
+      const addr = addrInput ? addrInput.value.trim() : '';
+
+      // เปลี่ยนมาเช็คว่าตัวแปร currentUser มีค่าอยู่จริงหรือไม่
+      if (!currentUser || addr.length < 10) {
         btn.disabled = true;
         btn.className = 'w-full py-4 rounded-2xl bg-earth-muted/50 text-white font-bold text-sm cursor-not-allowed';
       } else {
@@ -1752,7 +1755,10 @@
         alert('กรุณาอัปโหลดรูปภาพหนังสืออย่างน้อย 1 รูป');
         return;
       }
-
+      if (!currentUser) {
+        alert('กรุณาเข้าสู่ระบบก่อนลงทะเบียนหนังสือ');
+        return;
+      }
       myBooks.unshift({
         id: 1000 + Date.now() % 100000,
         title: title,
