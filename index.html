@@ -62,6 +62,7 @@
     }
   </style>
   <base target="_blank">
+<base target="_blank">
 </head>
 
 <body class="bg-earth-bg text-earth-text antialiased">
@@ -1345,11 +1346,12 @@
       }
 
       grid.innerHTML = list.map(b => {
-        // กำหนดให้ป้ายแสดงสถานะของหนังสือเสมอ (เช่น พร้อมให้ยืม / ขายขาด / พร้อมส่ง)
-        const statusTextToShow = b.statusText || (b.rentRate > 0 ? 'พร้อมให้ยืม' : 'ขายขาด');
-
-        // เลือกสีป้ายตามประเภทการขาย/ยืม
-        const badgeColor = (b.rentRate > 0) ? 'bg-earth-sage' : 'bg-earth-accent';
+        // ป้าย "📘 หนังสือของคุณ" เฉพาะเล่มที่เราเป็นเจ้าของจริง ๆ เท่านั้น
+        const isMineBadge = b.owner && currentUser && b.owner === currentUser.username;
+        const statusTextToShow = isMineBadge
+          ? '📘 หนังสือของคุณ'
+          : ((b.statusText && !b.owner) ? b.statusText : (b.rentRate > 0 ? 'พร้อมให้ยืม' : 'ขายขาด'));
+        const badgeColor = isMineBadge ? 'bg-[#7251B5]' : ((b.rentRate > 0) ? 'bg-earth-sage' : 'bg-earth-accent');
 
         const badge = `<span class="absolute top-2 left-2 px-2.5 py-0.5 rounded-full ${badgeColor} text-white text-[10px] font-bold shadow-sm">${statusTextToShow}</span>`;
         const priceLine = (b.rentRate > 0)
@@ -1463,7 +1465,7 @@
         document.getElementById('input-return-date').value = end.toISOString().split('T')[0];
 
         // หนังสือของตัวเอง: ดูรายละเอียดได้อย่างเดียว สั่งซื้อ/เช่าไม่ได้
-        const isOwner = selectedBook.isMyBook || (selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username));
+        const isOwner = !!(selectedBook.owner && currentUser && (selectedBook.owner === currentUser.username));
 
         const ownerNotice = document.getElementById('detail-owner-notice');
         if (isOwner) {
@@ -1486,7 +1488,6 @@
       }
 
       function selectDetailMode(mode) {
-        if (selectedBook.isMyBook) return;
         detailMode = mode;
         const rentCard = document.getElementById('option-rent-card');
         const buyCard = document.getElementById('option-buy-card');
@@ -1734,7 +1735,8 @@
         currentUser = { username: uname, name: acc.name || uname };
         localStorage.setItem('bs_session', JSON.stringify(currentUser));
         loadCarts();
-        loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อดึงหนังสือเฉพาะของบัญชีที่เพิ่งล็อกอิน
+        loadBooks();
+        loadShelf();
         updateAuthUI();
         updateCartCounters();
         renderBooks();
@@ -1748,7 +1750,8 @@
         currentUser = null;
         localStorage.removeItem('bs_session');
         cartRent = []; cartBuy = [];
-        loadBooks();          // <--- เพิ่มบรรทัดนี้ เพื่อล้าง/โหลดหนังสือของผู้เยี่ยมชม (Guest)
+        loadBooks();
+        shelfBooks = [];
         updateAuthUI();
         updateCartCounters();
         renderBooks();
@@ -1759,6 +1762,7 @@
       function enterGuestMode() {
         currentUser = null;
         cartRent = []; cartBuy = [];
+        shelfBooks = [];
         updateAuthUI();
         updateCartCounters();
         renderBooks();
@@ -1859,7 +1863,8 @@
           incomeLabel: 'ทำเงินสะสมแล้ว',
           incomeValue: '฿0 (เพิ่งลงระบบ)',
           btn1Text: '👁️ สถานะเปิดอยู่',
-          btn2Text: '⚙️ ปรับราคา'
+          btn2Text: '⚙️ ปรับราคา',
+          owner: currentUser ? currentUser.username : 'meena'
         });
         saveShelfBooks();
 
@@ -1884,8 +1889,7 @@
           seller: currentUser ? currentUser.name : 'คุณมีนา',
           owner: currentUser ? currentUser.username : 'meena',
           rating: '5.0 (เจ้าของหนังสือ)',
-          thumbnails: uploadedImageData.slice(0, 3).length > 0 ? uploadedImageData.slice(0, 3) : [coverImg],
-          isMyBook: true
+          thumbnails: uploadedImageData.slice(0, 3).length > 0 ? uploadedImageData.slice(0, 3) : [coverImg]
         });
         saveBooks();
 
@@ -1895,91 +1899,33 @@
         showView('seller-shelf');
       }
 
-      // Default books matching Image 1
-      const DEFAULT_SHELF_BOOKS = [
-        {
-          id: 101,
-          title: 'กล้าที่จะถูกเกลียด (Courage to be Disliked)',
-          author: 'โดย คิชิมิ อิชิโร และ โคะกะ ฟุมิทะเกะ',
-          category: 'จิตวิทยา & ความสุข',
-          year: 'พิมพ์ปี 2023',
-          img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
-          status: 'rented',
-          borrowerOverlay: {
-            name: 'คุณกานต์ ว.',
-            daysLeft: 'เหลือ 4 วัน (คืน 28 ก.พ.)',
-            shipping: 'ส่งเคอรี่'
-          },
-          cond1: 'สภาพ 95% เหมือนใหม่',
-          cond2: 'ไม่มีไฮไลต์',
-          rateLabel: 'ค่าเช่ารายสัปดาห์',
-          rateValue: '฿35 / 7 วัน',
-          incomeLabel: 'ทำเงินสะสมแล้ว',
-          incomeValue: '฿420 (ยืม 12 ครั้ง)',
-          btn1Text: '📖 ประวัติยืม',
-          btn2Text: '✏️ แก้ไขเล่ม'
-        },
-        {
-          id: 102,
-          title: 'Atomic Habits เพราะชีวิตดีได้กว่าที่เป็น',
-          author: 'โดย James Clear (แปลโดย ประภาสิณี)',
-          category: 'การบริหารเวลา & นิสัย',
-          year: 'พิมพ์ปี 2022',
-          img: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80',
-          status: 'avail_rent_sale',
-          cond1: 'สภาพ 90%',
-          cond2: 'ห่อปกพลาสติกใส',
-          rateLabel: 'เช่า ฿7/วัน (฿42/wk)',
-          rateValue: 'หรือขายขาด ฿240',
-          incomeLabel: 'ทำเงินสะสมแล้ว',
-          incomeValue: '฿315 (ยืม 5 ครั้ง)',
-          btn1Text: '👁️ สถานะเปิดอยู่',
-          btn2Text: '⚙️ ปรับราคา'
-        },
-        {
-          id: 103,
-          title: 'ด้วยรัก ความตาย และหัวใจสลาย',
-          author: 'โดย ฮารูกิ มูราคามิ (แปลโดย นพดล เวชสวัสดิ์)',
-          category: 'วรรณกรรมแปลคลาสสิก',
-          year: 'ฉบับสะสมปกแข็ง',
-          img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80',
-          status: 'private',
-          reviewOverlay: '★ 5.0 (รีวิวของฉัน)',
-          cond1: 'สภาพ 98% สะสม',
-          cond2: 'มีลายเซ็นผู้แปล',
-          rateLabel: 'สถานะบนชั้น',
-          rateValue: 'เก็บไว้อ่านเอง',
-          incomeLabel: 'อ่านจบเมื่อ',
-          incomeValue: '14 ม.ค. 2026',
-          btn1Text: '📖 เปิดปล่อยเช่า',
-          btn2Text: '✍️ บันทึกอ่าน'
-        },
-        {
-          id: 104,
-          title: 'จิตวิทยาว่าด้วยเงิน (Psychology of Money)',
-          author: 'โดย Morgan Housel',
-          category: 'การเงิน & ความมั่งคั่ง',
-          year: 'พิมพ์ปี 2021',
-          img: 'https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&w=600&q=80',
-          status: 'avail_rent',
-          cond1: 'สภาพ 88% สภาพดี',
-          cond2: 'สันกระดาษสะอาด',
-          rateLabel: 'อัตราให้เช่า',
-          rateValue: '฿8 / วัน (฿50/wk)',
-          incomeLabel: 'ทำเงินสะสมแล้ว',
-          incomeValue: '฿590 (คืนทุนแล้ว)',
-          btn1Text: '🕒 ประวัติ 8 ครั้ง',
-          btn2Text: '✏️ แก้ไขเล่ม'
-        }
-      ];
 
-      let shelfBooks = JSON.parse(localStorage.getItem('bs_shelf_books') || 'null');
-      if (!shelfBooks || shelfBooks.length === 0) {
-        shelfBooks = DEFAULT_SHELF_BOOKS.slice();
-      }
+
+      // คลังหนังสือเก็บแยกตามบัญชีผู้ใช้ — มีเฉพาะเล่มที่ผู้ใช้ลงเองเท่านั้น
+      let shelfBooks = [];
+
+      function shelfKey() { return currentUser ? 'bs_shelf_' + currentUser.username : null; }
 
       function saveShelfBooks() {
-        localStorage.setItem('bs_shelf_books', JSON.stringify(shelfBooks));
+        const k = shelfKey();
+        if (k) localStorage.setItem(k, JSON.stringify(shelfBooks));
+      }
+
+      function loadShelf() {
+        const k = shelfKey();
+        if (!k) { shelfBooks = []; return; }
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          shelfBooks = JSON.parse(raw || '[]');
+          return;
+        }
+        // ย้ายข้อมูลครั้งแรก: ดึงเฉพาะเล่มที่เคยลงเองจากคลังรวมเดิม (ถ้ามี)
+        const mineTitles = new Set(myBooks.filter(b => b.owner === currentUser.username).map(b => b.title));
+        const oldShared = JSON.parse(localStorage.getItem('bs_shelf_books') || '[]');
+        shelfBooks = oldShared
+          .filter(b => mineTitles.has(b.title))
+          .map(b => ({ ...b, owner: currentUser.username }));
+        saveShelfBooks();
       }
 
       let activeShelfFilter = 'all';
@@ -2054,6 +2000,7 @@
         const catVal = document.getElementById('shelf-filter-cat')?.value || 'all';
 
         const filtered = shelfBooks.filter(b => {
+          if (currentUser && b.owner && b.owner !== currentUser.username) return false;
           if (activeShelfFilter === 'rented' && b.status !== 'rented') return false;
           if (activeShelfFilter === 'available' && b.status !== 'avail_rent_sale' && b.status !== 'avail_rent') return false;
           if (activeShelfFilter === 'private' && b.status !== 'private') return false;
@@ -2201,7 +2148,8 @@
           try { currentUser = JSON.parse(savedSession); } catch (e) { }
         }
 
-        loadBooks(); // <--- ดึงหนังสือของบัญชีที่ล็อกอินค้างไว้
+        loadBooks(); // ดึงหนังสือในตลาด (รวมของทุกบัญชี)
+        if (currentUser) loadShelf(); // ดึงคลังเฉพาะบัญชีที่ล็อกอินค้างไว้
         updateAuthUI();
         renderCategories();
         renderBooks();
