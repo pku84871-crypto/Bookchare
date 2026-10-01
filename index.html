@@ -95,7 +95,7 @@
           class="text-earth-muted hover:text-earth-primary transition">สำรวจหนังสือ</button>
         <button onclick="openModal('how-modal')"
           class="text-earth-muted hover:text-earth-primary transition">วิธีการยืม-คืน</button>
-        <button onclick="showView('seller-add')"
+        <button onclick="showView('seller-shelf')"
           class="text-earth-muted hover:text-earth-primary transition">สำหรับผู้ขาย/ผู้ให้เช่า</button>
       </nav>
 
@@ -265,7 +265,7 @@
               class="px-6 py-3 rounded-2xl bg-earth-primary text-white font-bold text-sm hover:bg-earth-primary-hover shadow-sm transition flex items-center gap-2">
               <span class="material-symbols-outlined text-sm">menu_book</span> สำรวจหนังสือทั้งหมด
             </a>
-            <button onclick="showView('seller-add')"
+            <button onclick="showView('seller-shelf')"
               class="px-6 py-3 rounded-2xl bg-white text-earth-primary font-bold text-sm border border-earth-border hover:bg-earth-bg shadow-sm transition flex items-center gap-2">
               <span class="material-symbols-outlined text-sm">storefront</span> เริ่มเปิดร้านให้เช่า/ขาย
             </button>
@@ -671,10 +671,16 @@
               กรอกข้อมูลให้ครบถ้วนเพื่อเพิ่มโอกาสให้นักอ่านค้นพบหนังสือและไว้วางใจในการเช่าหรือซื้อ</p>
           </div>
         </div>
-        <span
-          class="hidden sm:inline-block bg-earth-sage-light text-earth-sage-dark border border-earth-sage/30 px-3.5 py-1.5 rounded-full text-xs font-semibold">
-          🛡️ มีระบบคุ้มครองประกันมัดจำ BookShare
-        </span>
+        <div class="flex items-center gap-2">
+          <button onclick="showView('seller-shelf')"
+            class="px-3.5 py-1.5 rounded-xl border border-earth-border bg-white text-earth-primary text-xs font-semibold hover:bg-earth-bg flex items-center gap-1.5 transition shadow-xs">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> กลับคลังหนังสือ
+          </button>
+          <span
+            class="hidden sm:inline-block bg-earth-sage-light text-earth-sage-dark border border-earth-sage/30 px-3.5 py-1.5 rounded-full text-xs font-semibold">
+            🛡️ มีระบบคุ้มครองประกันมัดจำ BookShare
+          </span>
+        </div>
       </div>
 
       <!-- Main Form 2 Columns -->
@@ -847,66 +853,150 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- VIEW 5: SELLER'S SHELF & INVENTORY TABLE (Image 2) -->
+    <!-- VIEW 5: SELLER'S SHELF & MY BOOKSHELF COLLECTION (Image 1) -->
     <!-- ======================================================================= -->
     <div id="view-seller-shelf" class="hidden space-y-6">
 
-      <!-- Store Header Banner -->
-      <div
-        class="bg-white rounded-3xl p-6 border border-earth-border shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=120&q=80"
-            class="w-16 h-16 rounded-2xl object-cover border border-earth-border" />
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-xl sm:text-2xl font-bold text-earth-primary">ร้านหนังสือของมีนา (Meena's Shelf)</h2>
-              <span class="bg-earth-sage-light text-earth-sage-dark text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-                ผู้ให้เช่าระดับพรีเมียม ★ 4.9
-              </span>
-            </div>
-            <p class="text-xs text-earth-muted mt-0.5">ศูนย์จัดการหนังสือ ส่งต่อความรู้
-              และติดตามรายการหนังสือของคุณแบบเรียลไทม์</p>
-          </div>
+      <!-- Breadcrumbs & Trust Row -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 text-earth-muted">
+          <span class="material-symbols-outlined text-sm cursor-pointer hover:text-earth-primary" onclick="showView('home')">home</span>
+          <span class="cursor-pointer hover:text-earth-primary" onclick="showView('home')">หน้าแรก</span>
+          <span>/</span>
+          <span>บัญชีของฉัน</span>
+          <span>/</span>
+          <b class="text-earth-primary">คลังหนังสือของฉัน</b>
         </div>
-        <button onclick="showView('seller-add')"
-          class="px-5 py-3 rounded-2xl bg-earth-primary text-white font-bold text-xs hover:bg-earth-primary-hover shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
-          <span class="material-symbols-outlined text-sm">add</span> ลงขาย/ให้เช่าหนังสือใหม่
-        </button>
+        <div class="inline-flex items-center gap-1.5 text-xs text-earth-sage-dark bg-earth-sage-light/70 px-3.5 py-1 rounded-full border border-earth-sage/30 self-start sm:self-auto">
+          <span class="w-2 h-2 rounded-full bg-earth-sage inline-block animate-pulse"></span>
+          <span>ระบบความคุ้มครอง BookShare Trust พร้อมดูแลหนังสือทุกเล่ม</span>
+        </div>
       </div>
 
-      <!-- Inventory Table Container (Note: Omitted Revenue, Rented & Shipping Cards per user instructions) -->
-      <div class="bg-white rounded-3xl p-6 border border-earth-border shadow-sm space-y-4">
+      <!-- Main Shelf Header Card matching Image 1 -->
+      <div class="bg-white rounded-3xl p-6 sm:p-7 border border-earth-border shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div class="space-y-2.5">
+            <div class="inline-flex items-center gap-1.5 bg-[#FAF0E4] border border-[#ECD8C3] text-[#9C5212] px-3 py-1 rounded-full text-xs font-semibold">
+              <span class="material-symbols-outlined text-sm">storefront</span>
+              <span id="shelf-badge-store">ตู้หนังสือชุมชน • รหัสสมาชิก #BS-88421</span>
+            </div>
+            
+            <h2 class="text-2xl sm:text-3xl font-bold text-earth-primary font-cute leading-tight" id="shelf-store-name">
+              คลังหนังสือของฉัน <span class="text-base sm:text-lg font-normal text-earth-muted font-body">(My Bookshelf &amp; Collection)</span>
+            </h2>
+            
+            <p class="text-xs sm:text-sm text-earth-muted max-w-2xl">
+              จัดการหนังสือสะสม เปิดโอกาสแบ่งปันเรื่องราวแก่นักอ่านท่านอื่น พร้อมสร้างรายได้หมุนเวียนอย่างยั่งยืน
+            </p>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-earth-border">
-          <div>
-            <h3 class="font-bold text-earth-primary text-base">จัดการสต็อกและสถานะการเช่ายืม</h3>
-            <p class="text-xs text-earth-muted">ติดตามรายการหนังสือของคุณ และตรวจสอบความพร้อมในการให้บริการ</p>
+            <!-- Stat summary pills -->
+            <div class="flex flex-wrap items-center gap-2 pt-1 text-xs">
+              <span class="px-3 py-1 rounded-full font-bold bg-[#FAF0E6] text-[#9C5212]" id="stat-total-chip">
+                ทั้งหมด 28 เล่ม
+              </span>
+              <span class="px-3 py-1 rounded-full font-semibold bg-[#FDF4EB] text-[#D97706] flex items-center gap-1.5" id="stat-rented-chip">
+                <span class="w-2 h-2 rounded-full bg-[#D97706]"></span> กำลังถูกเช่ายืม 6
+              </span>
+              <span class="px-3 py-1 rounded-full font-semibold bg-[#EAF3EA] text-[#2F5930] flex items-center gap-1.5" id="stat-avail-chip">
+                <span class="w-2 h-2 rounded-full bg-[#2F5930]"></span> พร้อมเช่า/ขาย 14
+              </span>
+              <span class="px-3 py-1 rounded-full font-semibold bg-[#F3F4F6] text-[#6B7280] flex items-center gap-1.5" id="stat-private-chip">
+                <span class="w-2 h-2 rounded-full bg-[#9CA3AF]"></span> อ่านส่วนตัว 8
+              </span>
+            </div>
           </div>
-          <span
-            class="bg-earth-bg border border-earth-border text-earth-primary px-3 py-1 rounded-full text-xs font-semibold self-start sm:self-auto"
-            id="shelf-total-badge">
-            หนังสือทั้งหมดในคลัง: 3 เล่ม
-          </span>
+
+          <!-- Action buttons -->
+          <div class="flex items-center gap-3 self-start lg:self-center shrink-0">
+            <button onclick="alert('ฟังก์ชันจัดหมวดหมู่ชั้นหนังสือ')" 
+              class="px-4 py-3 rounded-2xl bg-white border border-earth-border text-earth-primary font-bold text-xs hover:bg-earth-bg transition flex items-center gap-2 shadow-xs">
+              <span class="material-symbols-outlined text-sm text-earth-muted">format_list_bulleted</span>
+              <span>จัดหมวดหมู่ชั้นหนังสือ</span>
+            </button>
+            <button onclick="showView('seller-add')" 
+              class="px-5 py-3 rounded-2xl bg-[#4A3528] text-white font-bold text-xs hover:bg-[#382B24] transition flex items-center gap-2 shadow-md">
+              <span class="material-symbols-outlined text-base">add</span>
+              <span>+ เพิ่มหนังสือเข้าคลังใหม่</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters Container matching Image 1 -->
+      <div class="bg-white rounded-3xl p-5 border border-earth-border shadow-sm space-y-4">
+        
+        <!-- Search bar & Dropdowns row -->
+        <div class="flex flex-col md:flex-row items-center gap-3">
+          <div class="relative flex-1 w-full">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-earth-muted text-lg">search</span>
+            <input type="text" id="shelf-search-input" oninput="filterShelfBooks()" 
+              placeholder="ค้นหาตามชื่อหนังสือ, ผู้เขียน, สำนักพิมพ์ หรือ ISBN..."
+              class="w-full pl-10 pr-4 py-2.5 bg-earth-bg/50 border border-earth-border rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-earth-accent focus:bg-white transition" />
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <select id="shelf-filter-cond" onchange="filterShelfBooks()" 
+              class="px-3 py-2.5 bg-earth-bg/50 border border-earth-border rounded-2xl text-xs font-medium text-earth-primary focus:outline-none focus:bg-white">
+              <option value="all">สภาพหนังสือ: ทั้งหมด</option>
+              <option value="98">สภาพ 98% (สะสม)</option>
+              <option value="95">สภาพ 95% (เหมือนใหม่)</option>
+              <option value="90">สภาพ 90% (ดี)</option>
+              <option value="85">สภาพ 85% (ปานกลาง)</option>
+            </select>
+
+            <select id="shelf-filter-cat" onchange="filterShelfBooks()" 
+              class="px-3 py-2.5 bg-earth-bg/50 border border-earth-border rounded-2xl text-xs font-medium text-earth-primary focus:outline-none focus:bg-white">
+              <option value="all">หมวดหมู่: ทั้งหมด</option>
+              <option value="จิตวิทยา">จิตวิทยา &amp; พัฒนาตนเอง</option>
+              <option value="บริหาร">การบริหารเวลา &amp; นิสัย</option>
+              <option value="วรรณกรรม">วรรณกรรม &amp; นิยายแปล</option>
+              <option value="การเงิน">การเงิน &amp; การลงทุน</option>
+              <option value="ธุรกิจ">ธุรกิจ &amp; การลงทุน</option>
+            </select>
+
+            <!-- Grid / List toggle -->
+            <div class="flex items-center border border-earth-border rounded-2xl overflow-hidden bg-earth-bg/30">
+              <button class="p-2 bg-white text-earth-primary shadow-xs" title="มุมมองแบบการ์ด">
+                <span class="material-symbols-outlined text-lg">grid_view</span>
+              </button>
+              <button class="p-2 text-earth-muted hover:text-earth-primary" title="มุมมองแบบรายการ">
+                <span class="material-symbols-outlined text-lg">format_list_bulleted</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead>
-              <tr class="text-earth-muted border-b border-earth-border">
-                <th class="py-3 px-2 font-semibold">ข้อมูลหนังสือ</th>
-                <th class="py-3 px-2 font-semibold">รูปแบบรายการ</th>
-                <th class="py-3 px-2 font-semibold">โครงสร้างราคา</th>
-                <th class="py-3 px-2 font-semibold">สถานะปัจจุบัน</th>
-                <th class="py-3 px-2 font-semibold text-center">การจัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="shelf-books-tbody" class="divide-y divide-earth-border">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
+        <!-- Filter Chips row matching Image 1 -->
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-earth-border/60 text-xs" id="shelf-filter-chips">
+          <!-- Dynamically populated -->
         </div>
 
+      </div>
+
+      <!-- Shelf Book Cards Grid (4 Columns, Image 1) -->
+      <div id="shelf-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Pagination footer matching Image 1 -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 text-xs text-earth-muted">
+        <div id="shelf-page-info">
+          กำลังแสดงหนังสือลำดับที่ 1 - 4 จากทั้งหมด 28 เล่มในตู้หนังสือของคุณ
+        </div>
+        <div class="flex items-center gap-1">
+          <button class="w-8 h-8 rounded-xl border border-earth-border flex items-center justify-center hover:bg-white transition text-earth-muted">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+          </button>
+          <button class="w-8 h-8 rounded-xl bg-[#4A3528] text-white font-bold flex items-center justify-center">1</button>
+          <button class="w-8 h-8 rounded-xl border border-earth-border flex items-center justify-center hover:bg-white transition text-earth-text">2</button>
+          <button class="w-8 h-8 rounded-xl border border-earth-border flex items-center justify-center hover:bg-white transition text-earth-text">3</button>
+          <span class="px-1 text-earth-muted">...</span>
+          <button class="w-8 h-8 rounded-xl border border-earth-border flex items-center justify-center hover:bg-white transition text-earth-text">7</button>
+          <button class="w-8 h-8 rounded-xl border border-earth-border flex items-center justify-center hover:bg-white transition text-earth-muted">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -1749,17 +1839,33 @@
           alert('กรุณากรอกชื่อหนังสือและผู้แต่ง');
           return;
         }
-        if (uploadedImageData.length === 0) {
-          alert('กรุณาอัปโหลดรูปภาพหนังสืออย่างน้อย 1 รูป');
-          return;
-        }
-        if (!currentUser) {
-          alert('กรุณาเข้าสู่ระบบก่อนลงทะเบียนหนังสือ');
-          return;
-        }
 
+        const newId = 1000 + Date.now() % 100000;
+        const coverImg = uploadedImageData[0] || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';
+
+        // 1. Save to shelfBooks for the bookshelf collection view
+        shelfBooks.unshift({
+          id: newId,
+          title: title,
+          author: 'โดย ' + author,
+          category: cat,
+          year: 'พิมพ์ปี ' + new Date().getFullYear(),
+          img: coverImg,
+          status: 'avail_rent_sale',
+          cond1: 'สภาพ ' + condText.split(' ')[0],
+          cond2: 'ลงทะเบียนใหม่',
+          rateLabel: `เช่า ฿${rent}/วัน (฿${rent * 7}/wk)`,
+          rateValue: `หรือขายขาด ฿${sale}`,
+          incomeLabel: 'ทำเงินสะสมแล้ว',
+          incomeValue: '฿0 (เพิ่งลงระบบ)',
+          btn1Text: '👁️ สถานะเปิดอยู่',
+          btn2Text: '⚙️ ปรับราคา'
+        });
+        saveShelfBooks();
+
+        // 2. Save to myBooks for Home page category "📘 หนังสือของคุณ"
         myBooks.unshift({
-          id: 1000 + Date.now() % 100000,
+          id: newId,
           title: title,
           fullTitle: title,
           author: author,
@@ -1773,93 +1879,306 @@
           originalPrice: sale + 50,
           rentRate: rent,
           deposit: dep,
-          img: uploadedImageData[0],
+          img: coverImg,
           desc: `หนังสือที่คุณลงทะเบียนเข้าระบบ (${lType})`,
-          seller: currentUser ? currentUser.name : 'สมาชิก',
-          owner: currentUser ? currentUser.username : 'guest',
+          seller: currentUser ? currentUser.name : 'คุณมีนา',
+          owner: currentUser ? currentUser.username : 'meena',
           rating: '5.0 (เจ้าของหนังสือ)',
-          thumbnails: uploadedImageData.slice(0, 3),
+          thumbnails: uploadedImageData.slice(0, 3).length > 0 ? uploadedImageData.slice(0, 3) : [coverImg],
           isMyBook: true
         });
+        saveBooks();
 
-        saveBooks(); // บันทึกลง localStorage
+        alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! หนังสือถูกเพิ่มเข้าสู่คลังของคุณเรียบร้อยแล้ว`);
 
-        alert(`🎉 ลงทะเบียน '${title}' สำเร็จ! ไปดูได้ที่หมวด "📘 หนังสือของคุณ"`);
+        // Switch to the bookshelf collection view
+        showView('seller-shelf');
+      }
 
-        activeCategory = '📘 หนังสือของคุณ';
-        renderCategories();
-        renderBooks();
-        showView('home');
+      // Default books matching Image 1
+      const DEFAULT_SHELF_BOOKS = [
+        {
+          id: 101,
+          title: 'กล้าที่จะถูกเกลียด (Courage to be Disliked)',
+          author: 'โดย คิชิมิ อิชิโร และ โคะกะ ฟุมิทะเกะ',
+          category: 'จิตวิทยา & ความสุข',
+          year: 'พิมพ์ปี 2023',
+          img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
+          status: 'rented',
+          borrowerOverlay: {
+            name: 'คุณกานต์ ว.',
+            daysLeft: 'เหลือ 4 วัน (คืน 28 ก.พ.)',
+            shipping: 'ส่งเคอรี่'
+          },
+          cond1: 'สภาพ 95% เหมือนใหม่',
+          cond2: 'ไม่มีไฮไลต์',
+          rateLabel: 'ค่าเช่ารายสัปดาห์',
+          rateValue: '฿35 / 7 วัน',
+          incomeLabel: 'ทำเงินสะสมแล้ว',
+          incomeValue: '฿420 (ยืม 12 ครั้ง)',
+          btn1Text: '📖 ประวัติยืม',
+          btn2Text: '✏️ แก้ไขเล่ม'
+        },
+        {
+          id: 102,
+          title: 'Atomic Habits เพราะชีวิตดีได้กว่าที่เป็น',
+          author: 'โดย James Clear (แปลโดย ประภาสิณี)',
+          category: 'การบริหารเวลา & นิสัย',
+          year: 'พิมพ์ปี 2022',
+          img: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80',
+          status: 'avail_rent_sale',
+          cond1: 'สภาพ 90%',
+          cond2: 'ห่อปกพลาสติกใส',
+          rateLabel: 'เช่า ฿7/วัน (฿42/wk)',
+          rateValue: 'หรือขายขาด ฿240',
+          incomeLabel: 'ทำเงินสะสมแล้ว',
+          incomeValue: '฿315 (ยืม 5 ครั้ง)',
+          btn1Text: '👁️ สถานะเปิดอยู่',
+          btn2Text: '⚙️ ปรับราคา'
+        },
+        {
+          id: 103,
+          title: 'ด้วยรัก ความตาย และหัวใจสลาย',
+          author: 'โดย ฮารูกิ มูราคามิ (แปลโดย นพดล เวชสวัสดิ์)',
+          category: 'วรรณกรรมแปลคลาสสิก',
+          year: 'ฉบับสะสมปกแข็ง',
+          img: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80',
+          status: 'private',
+          reviewOverlay: '★ 5.0 (รีวิวของฉัน)',
+          cond1: 'สภาพ 98% สะสม',
+          cond2: 'มีลายเซ็นผู้แปล',
+          rateLabel: 'สถานะบนชั้น',
+          rateValue: 'เก็บไว้อ่านเอง',
+          incomeLabel: 'อ่านจบเมื่อ',
+          incomeValue: '14 ม.ค. 2026',
+          btn1Text: '📖 เปิดปล่อยเช่า',
+          btn2Text: '✍️ บันทึกอ่าน'
+        },
+        {
+          id: 104,
+          title: 'จิตวิทยาว่าด้วยเงิน (Psychology of Money)',
+          author: 'โดย Morgan Housel',
+          category: 'การเงิน & ความมั่งคั่ง',
+          year: 'พิมพ์ปี 2021',
+          img: 'https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&w=600&q=80',
+          status: 'avail_rent',
+          cond1: 'สภาพ 88% สภาพดี',
+          cond2: 'สันกระดาษสะอาด',
+          rateLabel: 'อัตราให้เช่า',
+          rateValue: '฿8 / วัน (฿50/wk)',
+          incomeLabel: 'ทำเงินสะสมแล้ว',
+          incomeValue: '฿590 (คืนทุนแล้ว)',
+          btn1Text: '🕒 ประวัติ 8 ครั้ง',
+          btn2Text: '✏️ แก้ไขเล่ม'
+        }
+      ];
+
+      let shelfBooks = JSON.parse(localStorage.getItem('bs_shelf_books') || 'null');
+      if (!shelfBooks || shelfBooks.length === 0) {
+        shelfBooks = DEFAULT_SHELF_BOOKS.slice();
+      }
+
+      function saveShelfBooks() {
+        localStorage.setItem('bs_shelf_books', JSON.stringify(shelfBooks));
+      }
+
+      let activeShelfFilter = 'all';
+
+      function setShelfFilter(f) {
+        activeShelfFilter = f;
+        renderShelf();
+      }
+
+      function filterShelfBooks() {
+        renderShelf();
       }
 
       function renderShelf() {
-        if (!currentUser) return;
+        // 1. Calculate dynamic counts based on shelfBooks
+        const totalCount = shelfBooks.length;
+        const rentedCount = shelfBooks.filter(b => b.status === 'rented').length;
+        const availCount = shelfBooks.filter(b => b.status === 'avail_rent_sale' || b.status === 'avail_rent').length;
+        const privateCount = shelfBooks.filter(b => b.status === 'private').length;
 
-        // 1. เปลี่ยนชื่อร้านค้าตามบัญชีที่ล็อกอินอยู่
-        const storeTitle = document.querySelector('#view-seller-shelf h2');
-        if (storeTitle) {
-          storeTitle.innerText = `ร้านหนังสือของ${currentUser.name} (${currentUser.username}'s Shelf)`;
+        // Update Header stats
+        const elTotal = document.getElementById('stat-total-chip');
+        if (elTotal) elTotal.innerText = `ทั้งหมด ${totalCount} เล่ม`;
+        const elRented = document.getElementById('stat-rented-chip');
+        if (elRented) elRented.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#D97706]"></span> กำลังถูกเช่ายืม ${rentedCount}`;
+        const elAvail = document.getElementById('stat-avail-chip');
+        if (elAvail) elAvail.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#2F5930]"></span> พร้อมเช่า/ขาย ${availCount}`;
+        const elPrivate = document.getElementById('stat-private-chip');
+        if (elPrivate) elPrivate.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#9CA3AF]"></span> อ่านส่วนตัว ${privateCount}`;
+
+        // Update Store title
+        if (currentUser) {
+          const stName = document.getElementById('shelf-store-name');
+          if (stName) {
+            stName.innerHTML = `คลังหนังสือของ${currentUser.name} <span class="text-base sm:text-lg font-normal text-earth-muted font-body">(${currentUser.username}'s Bookshelf)</span>`;
+          }
         }
 
-        // 2. กรองเฉพาะหนังสือที่เป็นของบัญชีนี้
-        const userBooks = myBooks.filter(b => b.owner === currentUser.username);
+        // 2. Render Secondary Filter Chips (matching Image 1)
+        const chipsContainer = document.getElementById('shelf-filter-chips');
+        if (chipsContainer) {
+          const filters = [
+            { id: 'all', label: `ทั้งหมด ${totalCount}` },
+            { id: 'rented', label: `กำลังถูกเช่ายืม ${rentedCount}`, dot: '#D97706' },
+            { id: 'available', label: `วางปล่อยเช่า / ขาย ${availCount}`, dot: '#2F5930' },
+            { id: 'private', label: `อ่านส่วนตัว / ซ่อนไว้ ${privateCount}`, dot: '#6B7280' },
+            { id: 'history', label: `ประวัติเคยปล่อยเช่า`, icon: 'history' }
+          ];
 
-        document.getElementById('shelf-total-badge').innerText = `หนังสือทั้งหมดในคลัง: ${userBooks.length} เล่ม`;
-        const tbody = document.getElementById('shelf-books-tbody');
+          chipsContainer.innerHTML = filters.map(f => {
+            const isActive = (activeShelfFilter === f.id);
+            const activeClass = isActive
+              ? 'bg-[#4A3528] text-white shadow-xs font-bold'
+              : 'bg-white text-earth-muted border border-earth-border hover:bg-earth-bg';
 
-        if (userBooks.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-earth-muted">ยังไม่มีรายการหนังสือที่คุณลงไว้</td></tr>`;
+            let dotHtml = '';
+            if (f.dot && !isActive) {
+              dotHtml = `<span class="w-2 h-2 rounded-full inline-block mr-1" style="background-color:${f.dot};"></span>`;
+            } else if (f.icon) {
+              dotHtml = `<span class="material-symbols-outlined text-xs mr-1">history</span>`;
+            }
+
+            return `<button onclick="setShelfFilter('${f.id}')" class="px-3.5 py-1.5 rounded-full text-xs font-medium transition flex items-center ${activeClass}">
+              ${dotHtml}${f.label}
+            </button>`;
+          }).join('');
+        }
+
+        // 3. Filter books
+        const searchVal = (document.getElementById('shelf-search-input')?.value || '').toLowerCase().trim();
+        const condVal = document.getElementById('shelf-filter-cond')?.value || 'all';
+        const catVal = document.getElementById('shelf-filter-cat')?.value || 'all';
+
+        const filtered = shelfBooks.filter(b => {
+          if (activeShelfFilter === 'rented' && b.status !== 'rented') return false;
+          if (activeShelfFilter === 'available' && b.status !== 'avail_rent_sale' && b.status !== 'avail_rent') return false;
+          if (activeShelfFilter === 'private' && b.status !== 'private') return false;
+          if (activeShelfFilter === 'history' && b.status !== 'rented') return false;
+
+          if (searchVal) {
+            const text = (b.title + ' ' + b.author + ' ' + (b.category || '')).toLowerCase();
+            if (!text.includes(searchVal)) return false;
+          }
+
+          if (catVal !== 'all' && b.category && !b.category.includes(catVal)) {
+            return false;
+          }
+
+          if (condVal !== 'all' && b.cond1 && !b.cond1.includes(condVal)) {
+            return false;
+          }
+
+          return true;
+        });
+
+        // 4. Render Grid of Cards (Matching Image 1)
+        const grid = document.getElementById('shelf-grid');
+        if (!grid) return;
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div class="col-span-full py-12 text-center text-earth-muted text-sm bg-white rounded-3xl border border-earth-border">
+            <span class="material-symbols-outlined text-3xl mb-1 text-earth-muted">search_off</span>
+            <p>ไม่พบรายการหนังสือในตัวกรองนี้</p>
+          </div>`;
           return;
         }
 
-        // 3. แสดงรายการหนังสือ พร้อมปุ่มลบหนังสือ
-        tbody.innerHTML = userBooks.map((b) => {
-          // หาตำแหน่ง index จริงใน myBooks เพื่อใช้ลบ
-          const realIndex = myBooks.findIndex(item => item.id === b.id);
+        grid.innerHTML = filtered.map((b) => {
+          let topBadgeHtml = '';
+          if (b.status === 'rented') {
+            topBadgeHtml = `<span class="bg-[#F8EDEB] text-[#9C382A] border border-[#F3D5CF] text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">🕒 ถูกยืมอยู่</span>`;
+          } else if (b.status === 'avail_rent_sale') {
+            topBadgeHtml = `
+              <div class="flex items-center gap-1">
+                <span class="bg-[#EAF3EA] text-[#2F5930] border border-[#C5DDC5] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">🟢 พร้อมให้เช่า</span>
+                <span class="bg-[#FAF0E6] text-[#9C5212] border border-[#EAC8A8] text-[9px] font-semibold px-1.5 py-0.5 rounded-full shadow-xs">เปิดขายขาดด้วย</span>
+              </div>`;
+          } else if (b.status === 'avail_rent') {
+            topBadgeHtml = `
+              <div class="flex items-center gap-1">
+                <span class="bg-[#EAF3EA] text-[#2F5930] border border-[#C5DDC5] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">🟢 พร้อมให้เช่า</span>
+                <span class="bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] text-[9px] font-semibold px-1.5 py-0.5 rounded-full shadow-xs">😄 มีคนรอคิว 2 คน</span>
+              </div>`;
+          } else if (b.status === 'private') {
+            topBadgeHtml = `<span class="bg-black/60 text-white text-[10px] font-medium px-2 py-0.5 rounded-full backdrop-blur-xs">คลังหนังสือของ 🔒 ส่วนตัว ไม่เปิดเช่า</span>`;
+          }
+
+          let overlayHtml = '';
+          if (b.borrowerOverlay) {
+            overlayHtml = `
+              <div class="absolute bottom-0 inset-x-0 bg-black/65 backdrop-blur-xs text-white p-2 text-[10px] leading-tight">
+                <div class="truncate">ผู้ยืมปัจจุบัน: ${b.borrowerOverlay.name}</div>
+                <div class="text-[#FDE68A] font-semibold flex items-center justify-between mt-0.5">
+                  <span>⏳ ${b.borrowerOverlay.daysLeft}</span>
+                  <span class="text-[9px] bg-white/20 px-1 py-0.5 rounded">${b.borrowerOverlay.shipping}</span>
+                </div>
+              </div>`;
+          } else if (b.reviewOverlay) {
+            overlayHtml = `
+              <div class="absolute bottom-2 left-2 bg-black/55 backdrop-blur-xs text-[#FDE68A] text-[10px] px-2 py-0.5 rounded-md font-semibold">
+                ${b.reviewOverlay}
+              </div>`;
+          }
+
+          const btn1 = b.btn1Text || '📖 ดูข้อมูล';
+          const btn2 = b.btn2Text || '✏️ แก้ไขเล่ม';
 
           return `
-      <tr class="hover:bg-earth-bg/60 transition">
-        <td class="py-3 px-2">
-          <div class="flex items-center gap-3">
-            <img src="${b.img}" class="w-10 h-14 object-cover rounded-lg border border-earth-border"/>
+          <div class="bg-white rounded-2xl p-3.5 border border-earth-border shadow-xs hover:shadow-md transition flex flex-col justify-between">
             <div>
-              <b class="text-earth-primary block line-clamp-1">${b.title}</b>
-              <span class="text-[11px] text-earth-muted">${b.author}</span><br>
-              <span class="text-[10px] text-earth-muted/80">ISBN: ${b.isbn}</span>
-            </div>
-          </div>
-        </td>
-        <td class="py-3 px-2">
-          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-earth-sage-light text-earth-sage-dark">
-            ${b.statusText || '📘 หนังสือของคุณ'}
-          </span>
-        </td>
-        <td class="py-3 px-2 leading-relaxed">
-          เช่า ฿${b.rentRate}/วัน <br>มัดจำ ฿${b.deposit} • ขาย ฿${b.buyPrice}
-        </td>
-        <td class="py-3 px-2">
-          <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-earth-sage-light text-earth-sage-dark">
-            🟢 ว่าง พร้อมให้เช่า/ซื้อ
-          </span>
-        </td>
-        <td class="py-3 px-2 text-center">
-          <div class="flex items-center justify-center gap-1.5">
-            <button onclick="deleteBookFromShelf(${realIndex})" class="p-1.5 rounded-lg border border-earth-border hover:bg-red-50 text-red-500" title="ลบหนังสือ">🗑️</button>
-          </div>
-        </td>
-      </tr>
-    `;
-        }).join('');
-      }
+              <div class="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-earth-bg mb-2.5">
+                <img src="${b.img}" class="w-full h-full object-cover" alt="${b.title}" />
+                <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                  ${topBadgeHtml}
+                </div>
+                ${overlayHtml}
+              </div>
 
-      // ฟังก์ชันสำหรับลบหนังสือออกจากคลัง
-      function deleteBookFromShelf(index) {
-        if (confirm('คุณต้องการลบหนังสือเล่มนี้ออกจากระบบใช่หรือไม่?')) {
-          myBooks.splice(index, 1);
-          saveBooks();
-          renderShelf();
-          renderBooks();
-          alert('ลบรายการหนังสือเรียบร้อยแล้ว');
+              <div class="flex items-center justify-between text-[10px] text-earth-muted mb-1 font-medium">
+                <span class="truncate">${b.category || 'หมวดหมู่ทั่วไป'}</span>
+                <span class="shrink-0">${b.year || 'พิมพ์ปี 2023'}</span>
+              </div>
+
+              <h3 class="font-bold text-earth-primary text-xs line-clamp-1 mb-0.5" title="${b.title}">${b.title}</h3>
+              <p class="text-[11px] text-earth-muted truncate mb-2">${b.author}</p>
+
+              <div class="flex flex-wrap items-center gap-1.5 mb-2.5 text-[10px]">
+                <span class="bg-earth-bg text-earth-primary border border-earth-border px-1.5 py-0.5 rounded font-medium">${b.cond1 || 'สภาพ 95%'}</span>
+                <span class="bg-earth-bg text-earth-muted border border-earth-border px-1.5 py-0.5 rounded">${b.cond2 || 'สมบูรณ์'}</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="pt-2 border-t border-earth-border flex items-center justify-between text-[10px] mb-2.5">
+                <div>
+                  <span class="text-earth-muted block text-[9px]">${b.rateLabel || 'ค่าบริการ'}</span>
+                  <b class="text-earth-primary text-xs">${b.rateValue || '-'}</b>
+                </div>
+                <div class="text-right">
+                  <span class="text-earth-muted block text-[9px]">${b.incomeLabel || 'สถานะสะสม'}</span>
+                  <b class="text-earth-accent text-xs">${b.incomeValue || '-'}</b>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <button onclick="alert('${btn1}: ${b.title}')" class="py-1.5 px-2 bg-earth-bg border border-earth-border hover:bg-earth-secondary/50 rounded-xl text-earth-primary font-semibold text-[11px] flex items-center justify-center gap-1 transition">
+                  ${btn1}
+                </button>
+                <button onclick="alert('${btn2}: ${b.title}')" class="py-1.5 px-2 bg-white border border-earth-border hover:bg-earth-bg rounded-xl text-earth-primary font-semibold text-[11px] flex items-center justify-center gap-1 transition">
+                  ${btn2}
+                </button>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+
+        const pageInfo = document.getElementById('shelf-page-info');
+        if (pageInfo) {
+          pageInfo.innerText = `กำลังแสดงหนังสือลำดับที่ 1 - ${filtered.length} จากทั้งหมด ${totalCount} เล่มในตู้หนังสือของคุณ`;
         }
       }
 

@@ -282,6 +282,85 @@ if 'all_books' not in st.session_state:
 if 'current_view' not in st.session_state:
     st.session_state.current_view = 'home'
 
+if 'seller_subview' not in st.session_state:
+    st.session_state.seller_subview = 'shelf'  # 'shelf' or 'add_book'
+
+if 'shelf_books' not in st.session_state:
+    st.session_state.shelf_books = [
+        {
+            'id': 101,
+            'title': 'กล้าที่จะถูกเกลียด (Courage to be Disliked)',
+            'author': 'โดย คิชิมิ อิชิโร และ โคะกะ ฟุมิทะเกะ',
+            'category': 'หมวดจิตวิทยา & ความสุข',
+            'year': 'พิมพ์ปี 2023',
+            'img': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
+            'status': 'rented',
+            'borrower_name': 'คุณกานต์ ว.',
+            'days_left': 'เหลือ 4 วัน (คืน 28 ก.พ.)',
+            'shipping': 'ส่งเคอรี่',
+            'cond1': 'สภาพ 95% เหมือนใหม่',
+            'cond2': 'ไม่มีไฮไลต์',
+            'rate_label': 'ค่าเช่ารายสัปดาห์',
+            'rate_val': '฿35 / 7 วัน',
+            'income_label': 'ทำเงินสะสมแล้ว',
+            'income_val': '฿420 (ยืม 12 ครั้ง)',
+            'btn1': '📖 ประวัติยืม',
+            'btn2': '✏️ แก้ไขเล่ม'
+        },
+        {
+            'id': 102,
+            'title': 'Atomic Habits เพราะชีวิตดีได้กว่าที่เป็น',
+            'author': 'โดย James Clear (แปลโดย ประภาสิณี)',
+            'category': 'การบริหารเวลา & นิสัย',
+            'year': 'พิมพ์ปี 2022',
+            'img': 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80',
+            'status': 'avail_rent_sale',
+            'cond1': 'สภาพ 90%',
+            'cond2': 'ห่อปกพลาสติกใส',
+            'rate_label': 'เช่า ฿7/วัน (฿42/wk)',
+            'rate_val': 'หรือขายขาด ฿240',
+            'income_label': 'ทำเงินสะสมแล้ว',
+            'income_val': '฿315 (ยืม 5 ครั้ง)',
+            'btn1': '👁️ สถานะเปิดอยู่',
+            'btn2': '⚙️ ปรับราคา'
+        },
+        {
+            'id': 103,
+            'title': 'ด้วยรัก ความตาย และหัวใจสลาย',
+            'author': 'โดย ฮารูกิ มูราคามิ (แปลโดย นพดล เวชสวัสดิ์)',
+            'category': 'วรรณกรรมแปลคลาสสิก',
+            'year': 'ฉบับสะสมปกแข็ง',
+            'img': 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80',
+            'status': 'private',
+            'review_rating': '★ 5.0 (รีวิวของฉัน)',
+            'cond1': 'สภาพ 98% สะสม',
+            'cond2': 'มีลายเซ็นผู้แปล',
+            'rate_label': 'สถานะบนชั้น',
+            'rate_val': 'เก็บไว้อ่านเอง',
+            'income_label': 'อ่านจบเมื่อ',
+            'income_val': '14 ม.ค. 2026',
+            'btn1': '📖 เปิดปล่อยเช่า',
+            'btn2': '✍️ บันทึกอ่าน'
+        },
+        {
+            'id': 104,
+            'title': 'จิตวิทยาว่าด้วยเงิน (Psychology of Money)',
+            'author': 'โดย Morgan Housel',
+            'category': 'การเงิน & ความมั่งคั่ง',
+            'year': 'พิมพ์ปี 2021',
+            'img': 'https://images.unsplash.com/photo-1592496431122-2349e0fbc666?auto=format&fit=crop&w=600&q=80',
+            'status': 'avail_rent',
+            'cond1': 'สภาพ 88% สภาพดี',
+            'cond2': 'สันกระดาษสะอาด',
+            'rate_label': 'อัตราให้เช่า',
+            'rate_val': '฿8 / วัน (฿50/wk)',
+            'income_label': 'ทำเงินสะสมแล้ว',
+            'income_val': '฿590 (คืนทุนแล้ว)',
+            'btn1': '🕒 ประวัติ 8 ครั้ง',
+            'btn2': '✏️ แก้ไขเล่ม'
+        }
+    ]
+
 if 'selected_book_id' not in st.session_state:
     st.session_state.selected_book_id = 1
 
@@ -394,9 +473,9 @@ with c_nav:
         if st.button("วิธียืม-คืน", key="nav_hw", use_container_width=True):
             how_it_works_dialog()
     with n4:
-        if st.button("ลงทะเบียนหนังสือ", key="nav_s", use_container_width=True):
+        if st.button("สำหรับผู้ขาย/ผู้ให้เช่า", key="nav_s", use_container_width=True):
             st.session_state.current_view = 'seller'
-            reset_add_book_form()
+            st.session_state.seller_subview = 'shelf'
             st.rerun()
 
 with c_rent_btn:
@@ -717,94 +796,301 @@ elif st.session_state.current_view == 'order_success':
         st.rerun()
 
 # ==============================================================================
-# 10. VIEW 5: SELLER CENTER & ADD BOOK PAGE
+# 10. VIEW 5: SELLER CENTER & MY BOOKSHELF (Image 1 & Image 3)
 # ==============================================================================
 elif st.session_state.current_view == 'seller':
-    k_suf = st.session_state.form_key_suffix
+    if st.session_state.seller_subview == 'shelf':
+        # Breadcrumbs & Trust Row
+        b_c1, b_c2 = st.columns([6, 4])
+        with b_c1:
+            st.markdown(
+                """
+                <div style='font-size:12px; color:#8D7B68; padding-top:4px;'>
+                    <a href='#' style='color:#8D7B68; text-decoration:none;'>หน้าแรก</a> / 
+                    <span>บัญชีของฉัน</span> / 
+                    <b style='color:#4A3528;'>คลังหนังสือของฉัน</b>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        with b_c2:
+            st.markdown(
+                """
+                <div style='text-align:right;'>
+                    <span style='background-color:#EAF2E8; color:#2F5930; border:1px solid #C0DAC0; padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;'>
+                        🟢 ระบบความคุ้มครอง BookShare Trust พร้อมดูแลหนังสือทุกเล่ม
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-    st.markdown("<h2>📄 ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)</h2>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color:#FFFFFF; border:1px solid #EADBCE; border-radius:24px; padding:24px;'>", unsafe_allow_html=True)
-    
-    col_form_left, col_form_right = st.columns([4.2, 5.8], gap="large")
+        # Header Title Banner Card matching Image 1
+        c_head_l, c_head_r = st.columns([7, 3], gap="medium")
+        total_cnt = len(st.session_state.shelf_books)
+        rented_cnt = sum(1 for b in st.session_state.shelf_books if b['status'] == 'rented')
+        avail_cnt = sum(1 for b in st.session_state.shelf_books if 'avail' in b['status'])
+        private_cnt = sum(1 for b in st.session_state.shelf_books if b['status'] == 'private')
 
-    with col_form_left:
-        st.markdown("<b style='font-size:13px;'>อัปโหลดรูปภาพหนังสือจริง *</b>", unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("เลือกไฟล์รูปภาพหนังสือ (JPG, PNG)", type=["jpg", "png", "jpeg"], key=f"upl_{k_suf}")
-        
-        uploaded_img_url = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80"
-        
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="รูปภาพหนังสือที่คุณอัปโหลด", use_container_width=True)
-            bytes_data = uploaded_file.getvalue()
-            try:
-                import io
-                from PIL import Image
-                img_pil = Image.open(io.BytesIO(bytes_data)).convert("RGB")
-                img_pil.thumbnail((800, 800))
-                buf = io.BytesIO()
-                img_pil.save(buf, format="JPEG", quality=80)
-                uploaded_img_url = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
-            except Exception:
-                uploaded_img_url = "data:image/png;base64," + base64.b64encode(bytes_data).decode()
-        else:
-            st.info("💡 สามารถลองอัปโหลดรูปหนังสือจริงเพื่อพรีวิวได้ หากไม่ได้อัปโหลดจะใช้รูปตัวอย่างเริ่มต้นแทน")
-            st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80", width=140, caption="ตัวอย่างภาพปก")
+        with c_head_l:
+            st.markdown(
+                f"""
+                <div style="background-color:#FFFFFF; border:1px solid #EADBCE; border-radius:24px; padding:22px; margin:10px 0 16px 0;">
+                    <span style="background-color:#FAF0E4; border:1px solid #ECD8C3; color:#9C5212; padding:3px 12px; border-radius:999px; font-size:11px; font-weight:600;">
+                        🏪 ตู้หนังสือชุมชน • รหัสสมาชิก #BS-88421
+                    </span>
+                    <h2 style="font-size:26px; font-weight:700; color:#4A3528; margin:8px 0 4px 0; font-family:'Mali', cursive;">
+                        คลังหนังสือของฉัน <span style="font-size:16px; font-weight:400; color:#8D7B68; font-family:'Kanit', sans-serif;">(My Bookshelf &amp; Collection)</span>
+                    </h2>
+                    <p style="font-size:12px; color:#6C5E53; margin-bottom:12px;">
+                        จัดการหนังสือสะสม เปิดโอกาสแบ่งปันเรื่องราวแก่นักอ่านท่านอื่น พร้อมสร้างรายได้หมุนเวียนอย่างยั่งยืน
+                    </p>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <span style="background-color:#FAF0E6; color:#9C5212; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">ทั้งหมด {total_cnt} เล่ม</span>
+                        <span style="background-color:#FDF4EB; color:#D97706; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;">● กำลังถูกเช่ายืม {rented_cnt}</span>
+                        <span style="background-color:#EAF3EA; color:#2F5930; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;">● พร้อมเช่า/ขาย {avail_cnt}</span>
+                        <span style="background-color:#F3F4F6; color:#6B7280; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;">● อ่านส่วนตัว {private_cnt}</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-        condition_val = st.select_slider("สภาพหนังสือ", options=["70% เก่าเก็บ", "85% ปานกลาง", "95% ดีมาก", "100% มือหนึ่ง"], value="95% ดีมาก", key=f"cond_{k_suf}")
-
-    with col_form_right:
-        b_title_input = st.text_input("ชื่อหนังสือ (Book Title) *", value="", placeholder="กรอกชื่อหนังสือ...", key=f"title_{k_suf}")
-        b_author_input = st.text_input("ผู้แต่ง (Author) *", value="", placeholder="กรอกชื่อผู้แต่ง...", key=f"auth_{k_suf}")
-        b_cat_input = st.selectbox("หมวดหมู่หนังสือ *", ["จิตวิทยา & พัฒนาตนเอง", "วรรณกรรม & นิยายแปล", "ธุรกิจ & การลงทุน", "หนังสือภาพ & ไลฟ์สไตล์"], key=f"cat_{k_suf}")
-
-        p_col1, p_col2 = st.columns(2)
-        with p_col1:
-            price_sale = st.number_input("ราคาขายส่งต่อ (฿)", min_value=0, value=200, key=f"psale_{k_suf}")
-        with p_col2:
-            price_rent = st.number_input("ค่าเช่าต่อวัน (฿/วัน)", min_value=0, value=5, key=f"prent_{k_suf}")
-
-        b_desc_input = st.text_area("คำอธิบายหนังสือโดยย่อ", value="", placeholder="กรอกเรื่องย่อหรือรายละเอียดเพิ่มเติม...", key=f"desc_{k_suf}")
-
-        st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-
-        if st.button("💾 บันทึกและลงทะเบียนหนังสือ", key=f"btn_sub_{k_suf}", use_container_width=True):
-            if not b_title_input or not b_author_input:
-                st.error("กรุณากรอกชื่อหนังสือและผู้แต่งให้เรียบร้อย")
-            else:
-                new_book_item = {
-                    'id': len(st.session_state.all_books) + 1,
-                    'title': b_title_input,
-                    'full_title': f"{b_title_input} (หนังสือของคุณ)",
-                    'author': b_author_input,
-                    'category': b_cat_input,
-                    'isbn': '978-616-XXXXX-X',
-                    'status': 'my_book',
-                    'status_text': '📘 หนังสือของคุณ',
-                    'condition': condition_val.split()[0],
-                    'condition_full': condition_val,
-                    'buy_price': price_sale,
-                    'original_price': price_sale + 50,
-                    'rent_price': price_rent,
-                    'deposit': 100,
-                    'img': uploaded_img_url,
-                    'desc': b_desc_input if b_desc_input else "หนังสือที่คุณลงทะเบียนเข้าระบบด้วยตนเอง",
-                    'seller_name': st.session_state.user['name'],
-                    'seller_rating': 5.0,
-                    'seller_count': 1,
-                    'is_my_book': True
-                }
-                
-                # Insert to top
-                st.session_state.all_books.insert(0, new_book_item)
-                
-                # Switch to home view
-                st.session_state.active_category = "📘 หนังสือของคุณ"
-                st.session_state.current_view = 'home'
-                
-                # Clear form
+        with c_head_r:
+            st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+            if st.button("➕ เพิ่มหนังสือเข้าคลังใหม่", key="btn_add_to_shelf_top", use_container_width=True):
+                st.session_state.seller_subview = 'add_book'
                 reset_add_book_form()
-                
-                st.session_state['toast_msg'] = f"ลงทะเบียน '{b_title_input}' สำเร็จแล้ว!"
                 st.rerun()
+            if st.button("📋 จัดหมวดหมู่ชั้นหนังสือ", key="btn_cat_shelf", use_container_width=True):
+                st.toast("จัดหมวดหมู่ชั้นหนังสือเรียบร้อยแล้ว", icon="📋")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        # Search & Filter Controls matching Image 1
+        st.markdown("<div style='background-color:#FFFFFF; border:1px solid #EADBCE; border-radius:20px; padding:16px; margin-bottom:16px;'>", unsafe_allow_html=True)
+        col_s1, col_s2, col_s3 = st.columns([5, 3, 2])
+        with col_s1:
+            shelf_search = st.text_input("ค้นหาในคลัง", placeholder="🔍 ค้นหาตามชื่อหนังสือ, ผู้เขียน, สำนักพิมพ์ หรือ ISBN...", key="shelf_srch", label_visibility="collapsed")
+        with col_s2:
+            shelf_filter = st.selectbox("สถานะ", ["ทั้งหมด", "กำลังถูกเช่ายืม", "วางปล่อยเช่า / ขาย", "อ่านส่วนตัว / ซ่อนไว้"], key="shelf_stat", label_visibility="collapsed")
+        with col_s3:
+            shelf_cat_filter = st.selectbox("หมวดหมู่", ["ทุกหมวดหมู่", "จิตวิทยา", "บริหาร", "วรรณกรรม", "การเงิน"], key="shelf_cat", label_visibility="collapsed")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Filter shelf books
+        filtered_shelf = []
+        for bk in st.session_state.shelf_books:
+            if shelf_filter == "กำลังถูกเช่ายืม" and bk['status'] != 'rented':
+                continue
+            elif shelf_filter == "วางปล่อยเช่า / ขาย" and 'avail' not in bk['status']:
+                continue
+            elif shelf_filter == "อ่านส่วนตัว / ซ่อนไว้" and bk['status'] != 'private':
+                continue
+            
+            if shelf_cat_filter != "ทุกหมวดหมู่" and shelf_cat_filter not in bk.get('category', ''):
+                continue
+
+            if shelf_search:
+                q = shelf_search.lower()
+                if q not in bk['title'].lower() and q not in bk['author'].lower():
+                    continue
+
+            filtered_shelf.append(bk)
+
+        # 4-Column Grid matching Image 1
+        if not filtered_shelf:
+            st.info("ไม่พบรายการหนังสือในตัวกรองนี้")
+        else:
+            grid_cols = st.columns(4)
+            for idx, bk in enumerate(filtered_shelf):
+                col_pos = idx % 4
+                with grid_cols[col_pos]:
+                    # Top Badges
+                    if bk['status'] == 'rented':
+                        badge_html = "<span style='background-color:#F8EDEB; color:#9C382A; border:1px solid #F3D5CF; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700;'>🕒 ถูกยืมอยู่</span>"
+                    elif bk['status'] == 'avail_rent_sale':
+                        badge_html = "<span style='background-color:#EAF3EA; color:#2F5930; border:1px solid #C5DDC5; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700;'>🟢 พร้อมให้เช่า</span> <span style='background-color:#FAF0E6; color:#9C5212; border:1px solid #EAC8A8; padding:2px 6px; border-radius:999px; font-size:9px; font-weight:600;'>เปิดขายขาดด้วย</span>"
+                    elif bk['status'] == 'avail_rent':
+                        badge_html = "<span style='background-color:#EAF3EA; color:#2F5930; border:1px solid #C5DDC5; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700;'>🟢 พร้อมให้เช่า</span> <span style='background-color:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:2px 6px; border-radius:999px; font-size:9px; font-weight:600;'>😄 มีคนรอคิว 2 คน</span>"
+                    else:
+                        badge_html = "<span style='background-color:rgba(0,0,0,0.6); color:#FFFFFF; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:600;'>คลังหนังสือของ 🔒 ส่วนตัว</span>"
+
+                    # Bottom Overlay on cover
+                    overlay_html = ""
+                    if bk.get('borrower_name'):
+                        overlay_html = f"""
+                        <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.7); color:#FFFFFF; padding:6px 8px; font-size:10px; border-bottom-left-radius:12px; border-bottom-right-radius:12px; line-height:1.2;">
+                            <div>ผู้ยืมปัจจุบัน: {bk['borrower_name']}</div>
+                            <div style="color:#FDE68A; font-weight:600; margin-top:2px;">⏳ {bk.get('days_left', '')} | {bk.get('shipping', '')}</div>
+                        </div>
+                        """
+                    elif bk.get('review_rating'):
+                        overlay_html = f"""
+                        <div style="position:absolute; bottom:8px; left:8px; background:rgba(0,0,0,0.6); color:#FDE68A; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:600;">
+                            {bk['review_rating']}
+                        </div>
+                        """
+
+                    st.markdown(
+                        f"""
+                        <div class="card-book">
+                            <div style="position:relative; width:100%; aspect-ratio:3/4; border-radius:12px; overflow:hidden; background-color:#EFE9E2; margin-bottom:10px;">
+                                <img src="{bk['img']}" style="width:100%; height:100%; object-fit:cover;">
+                                <div style="position:absolute; top:8px; right:8px; text-align:right;">{badge_html}</div>
+                                {overlay_html}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:10px; color:#8D7B68; margin-bottom:2px;">
+                                <span>{bk.get('category', 'หมวดหมู่ทั่วไป')}</span>
+                                <span>{bk.get('year', 'พิมพ์ปี 2023')}</span>
+                            </div>
+                            <h4 style="margin:2px 0 2px 0; font-size:13px; font-weight:700; color:#382B24; height:36px; overflow:hidden; line-height:1.3;">
+                                {bk['title']}
+                            </h4>
+                            <div style="font-size:11px; color:#6C5E53; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                {bk['author']}
+                            </div>
+                            <div style="display:flex; gap:4px; margin-bottom:8px;">
+                                <span style="background-color:#F5EFE6; border:1px solid #EADBCE; padding:2px 6px; border-radius:4px; font-size:9px;">{bk.get('cond1', 'สภาพ 95%')}</span>
+                                <span style="background-color:#F5EFE6; border:1px solid #EADBCE; padding:2px 6px; border-radius:4px; font-size:9px; color:#8D7B68;">{bk.get('cond2', 'สมบูรณ์')}</span>
+                            </div>
+                            <div style="border-top:1px solid #EADBCE; padding-top:6px; margin-top:2px; display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <span style="font-size:9px; color:#8D7B68; display:block;">{bk.get('rate_label', 'ค่าบริการ')}</span>
+                                    <b style="font-size:11px; color:#4A3528;">{bk.get('rate_val', '-')}</b>
+                                </div>
+                                <div style="text-align:right;">
+                                    <span style="font-size:9px; color:#8D7B68; display:block;">{bk.get('income_label', 'ทำเงินสะสม')}</span>
+                                    <b style="font-size:11px; color:#BC6C25;">{bk.get('income_val', '-')}</b>
+                                </div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    btn_c1, btn_c2 = st.columns(2)
+                    with btn_c1:
+                        if st.button(bk.get('btn1', '📖 ดูข้อมูล'), key=f"btn_sh1_{bk['id']}", use_container_width=True):
+                            st.toast(f"{bk.get('btn1')}: {bk['title']}", icon="📖")
+                    with btn_c2:
+                        if st.button(bk.get('btn2', '✏️ แก้ไข'), key=f"btn_sh2_{bk['id']}", use_container_width=True):
+                            st.toast(f"{bk.get('btn2')}: {bk['title']}", icon="✏️")
+
+                    st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
+
+        st.caption(f"กำลังแสดงหนังสือลำดับที่ 1 - {len(filtered_shelf)} จากทั้งหมด {len(st.session_state.shelf_books)} เล่มในตู้หนังสือของคุณ")
+
+    elif st.session_state.seller_subview == 'add_book':
+        k_suf = st.session_state.form_key_suffix
+
+        # Top return button
+        back_col1, back_col2 = st.columns([3, 7])
+        with back_col1:
+            if st.button("← กลับไปที่คลังหนังสือของฉัน", key="btn_back_to_shelf"):
+                st.session_state.seller_subview = 'shelf'
+                st.rerun()
+        with back_col2:
+            st.markdown("<div style='text-align:right;'><span style='background-color:#EAF2E8; color:#2F5930; padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;'>🛡️ มีระบบคุ้มครองประกันมัดจำ BookShare</span></div>", unsafe_allow_html=True)
+
+        st.markdown("<h2>📄 ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)</h2>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color:#FFFFFF; border:1px solid #EADBCE; border-radius:24px; padding:24px;'>", unsafe_allow_html=True)
+        
+        col_form_left, col_form_right = st.columns([4.2, 5.8], gap="large")
+
+        with col_form_left:
+            st.markdown("<b style='font-size:13px;'>อัปโหลดรูปภาพหนังสือจริง *</b>", unsafe_allow_html=True)
+            uploaded_file = st.file_uploader("เลือกไฟล์รูปภาพหนังสือ (JPG, PNG)", type=["jpg", "png", "jpeg"], key=f"upl_{k_suf}")
+            
+            uploaded_img_url = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80"
+            
+            if uploaded_file is not None:
+                st.image(uploaded_file, caption="รูปภาพหนังสือที่คุณอัปโหลด", use_container_width=True)
+                bytes_data = uploaded_file.getvalue()
+                try:
+                    import io
+                    from PIL import Image
+                    img_pil = Image.open(io.BytesIO(bytes_data)).convert("RGB")
+                    img_pil.thumbnail((800, 800))
+                    buf = io.BytesIO()
+                    img_pil.save(buf, format="JPEG", quality=80)
+                    uploaded_img_url = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+                except Exception:
+                    uploaded_img_url = "data:image/png;base64," + base64.b64encode(bytes_data).decode()
+            else:
+                st.info("💡 สามารถลองอัปโหลดรูปหนังสือจริงเพื่อพรีวิวได้ หากไม่ได้อัปโหลดจะใช้รูปตัวอย่างเริ่มต้นแทน")
+                st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80", width=140, caption="ตัวอย่างภาพปก")
+
+            condition_val = st.select_slider("สภาพหนังสือ", options=["70% เก่าเก็บ", "85% ปานกลาง", "95% ดีมาก", "100% มือหนึ่ง"], value="95% ดีมาก", key=f"cond_{k_suf}")
+
+        with col_form_right:
+            b_title_input = st.text_input("ชื่อหนังสือ (Book Title) *", value="", placeholder="กรอกชื่อหนังสือ...", key=f"title_{k_suf}")
+            b_author_input = st.text_input("ผู้แต่ง (Author) *", value="", placeholder="กรอกชื่อผู้แต่ง...", key=f"auth_{k_suf}")
+            b_cat_input = st.selectbox("หมวดหมู่หนังสือ *", ["จิตวิทยา & พัฒนาตนเอง", "วรรณกรรม & นิยายแปล", "ธุรกิจ & การลงทุน", "หนังสือภาพ & ไลฟ์สไตล์"], key=f"cat_{k_suf}")
+
+            p_col1, p_col2 = st.columns(2)
+            with p_col1:
+                price_sale = st.number_input("ราคาขายส่งต่อ (฿)", min_value=0, value=200, key=f"psale_{k_suf}")
+            with p_col2:
+                price_rent = st.number_input("ค่าเช่าต่อวัน (฿/วัน)", min_value=0, value=5, key=f"prent_{k_suf}")
+
+            b_desc_input = st.text_area("คำอธิบายหนังสือโดยย่อ", value="", placeholder="กรอกเรื่องย่อหรือรายละเอียดเพิ่มเติม...", key=f"desc_{k_suf}")
+
+            st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+
+            if st.button("💾 บันทึกและลงทะเบียนหนังสือ", key=f"btn_sub_{k_suf}", use_container_width=True):
+                if not b_title_input or not b_author_input:
+                    st.error("กรุณากรอกชื่อหนังสือและผู้แต่งให้เรียบร้อย")
+                else:
+                    new_id = len(st.session_state.all_books) + 1
+                    new_book_item = {
+                        'id': new_id,
+                        'title': b_title_input,
+                        'full_title': f"{b_title_input} (หนังสือของคุณ)",
+                        'author': b_author_input,
+                        'category': b_cat_input,
+                        'isbn': '978-616-XXXXX-X',
+                        'status': 'my_book',
+                        'status_text': '📘 หนังสือของคุณ',
+                        'condition': condition_val.split()[0],
+                        'condition_full': condition_val,
+                        'buy_price': price_sale,
+                        'original_price': price_sale + 50,
+                        'rent_price': price_rent,
+                        'deposit': 100,
+                        'img': uploaded_img_url,
+                        'desc': b_desc_input if b_desc_input else "หนังสือที่คุณลงทะเบียนเข้าระบบด้วยตนเอง",
+                        'seller_name': st.session_state.user['name'],
+                        'seller_rating': 5.0,
+                        'seller_count': 1,
+                        'is_my_book': True
+                    }
+                    
+                    # 1. Insert to catalog for home page "📘 หนังสือของคุณ"
+                    st.session_state.all_books.insert(0, new_book_item)
+
+                    # 2. Insert to user's shelf collection
+                    st.session_state.shelf_books.insert(0, {
+                        'id': new_id,
+                        'title': b_title_input,
+                        'author': f"โดย {b_author_input}",
+                        'category': b_cat_input,
+                        'year': 'พิมพ์ปี 2024',
+                        'img': uploaded_img_url,
+                        'status': 'avail_rent_sale',
+                        'cond1': f"สภาพ {condition_val.split()[0]}",
+                        'cond2': 'ลงทะเบียนใหม่',
+                        'rate_label': f"เช่า ฿{price_rent}/วัน",
+                        'rate_val': f"หรือขายขาด ฿{price_sale}",
+                        'income_label': 'ทำเงินสะสมแล้ว',
+                        'income_val': '฿0 (เพิ่งลงระบบ)',
+                        'btn1': '👁️ สถานะเปิดอยู่',
+                        'btn2': '⚙️ ปรับราคา'
+                    })
+                    
+                    # Switch to shelf view
+                    st.session_state.seller_subview = 'shelf'
+                    reset_add_book_form()
+                    
+                    st.session_state['toast_msg'] = f"ลงทะเบียน '{b_title_input}' สำเร็จและเพิ่มเข้าคลังหนังสือแล้ว!"
+                    st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
