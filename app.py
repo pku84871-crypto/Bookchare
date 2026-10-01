@@ -284,6 +284,9 @@ if 'current_view' not in st.session_state:
 
 if 'seller_subview' not in st.session_state:
     st.session_state.seller_subview = 'shelf'  # 'shelf' or 'add_book'
+    
+if 'edit_book_id' not in st.session_state:
+    st.session_state.edit_book_id = None
 
 if 'shelf_books' not in st.session_state:
     st.session_state.shelf_books = [
@@ -860,6 +863,7 @@ elif st.session_state.current_view == 'seller':
             st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
             if st.button("➕ เพิ่มหนังสือเข้าคลังใหม่", key="btn_add_to_shelf_top", use_container_width=True):
                 st.session_state.seller_subview = 'add_book'
+                st.session_state.edit_book_id = None # รีเซ็ตค่าเพื่อเปิดฟอร์มเปล่า
                 reset_add_book_form()
                 st.rerun()
             if st.button("📋 จัดหมวดหมู่ชั้นหนังสือ", key="btn_cat_shelf", use_container_width=True):
@@ -969,11 +973,17 @@ elif st.session_state.current_view == 'seller':
 
                     btn_c1, btn_c2 = st.columns(2)
                     with btn_c1:
-                        if st.button(bk.get('btn1', '📖 ดูข้อมูล'), key=f"btn_sh1_{bk['id']}", use_container_width=True):
-                            st.toast(f"{bk.get('btn1')}: {bk['title']}", icon="📖")
+                        if st.button("⚙️ ตั้งค่าหนังสือ", key=f"btn_edit_{bk['id']}", use_container_width=True):
+                            st.session_state.edit_book_id = bk['id']
+                            st.session_state.seller_subview = 'add_book'
+                            st.rerun()
                     with btn_c2:
-                        if st.button(bk.get('btn2', '✏️ แก้ไข'), key=f"btn_sh2_{bk['id']}", use_container_width=True):
-                            st.toast(f"{bk.get('btn2')}: {bk['title']}", icon="✏️")
+                        if st.button("🗑️ ลบหนังสือ", key=f"btn_del_{bk['id']}", use_container_width=True):
+                            # ลบหนังสือออกจากคลัง (shelf_books) และหน้าแรก (all_books)
+                            st.session_state.shelf_books = [b for b in st.session_state.shelf_books if b['id'] != bk['id']]
+                            st.session_state.all_books = [b for b in st.session_state.all_books if b['id'] != bk['id']]
+                            st.toast(f"ลบหนังสือ {bk['title']} สำเร็จ", icon="🗑️")
+                            st.rerun()
 
                     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
 
@@ -982,16 +992,26 @@ elif st.session_state.current_view == 'seller':
     elif st.session_state.seller_subview == 'add_book':
         k_suf = st.session_state.form_key_suffix
 
+        # ดึงข้อมูลหนังสือเดิมถ้าอยู่ในโหมดแก้ไข
+        edit_bk = None
+        edit_bk_all = None
+        if st.session_state.edit_book_id:
+            edit_bk = next((b for b in st.session_state.shelf_books if b['id'] == st.session_state.edit_book_id), None)
+            edit_bk_all = next((b for b in st.session_state.all_books if b['id'] == st.session_state.edit_book_id), None)
+
+        page_title = "⚙️ ตั้งค่าและแก้ไขข้อมูลหนังสือ" if edit_bk else "📄 ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)"
+
         # Top return button
         back_col1, back_col2 = st.columns([3, 7])
         with back_col1:
             if st.button("← กลับไปที่คลังหนังสือของฉัน", key="btn_back_to_shelf"):
                 st.session_state.seller_subview = 'shelf'
+                st.session_state.edit_book_id = None
                 st.rerun()
         with back_col2:
             st.markdown("<div style='text-align:right;'><span style='background-color:#EAF2E8; color:#2F5930; padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;'>🛡️ มีระบบคุ้มครองประกันมัดจำ BookShare</span></div>", unsafe_allow_html=True)
 
-        st.markdown("<h2>📄 ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2>{page_title}</h2>", unsafe_allow_html=True)
         st.markdown("<div style='background-color:#FFFFFF; border:1px solid #EADBCE; border-radius:24px; padding:24px;'>", unsafe_allow_html=True)
         
         col_form_left, col_form_right = st.columns([4.2, 5.8], gap="large")
@@ -1000,7 +1020,8 @@ elif st.session_state.current_view == 'seller':
             st.markdown("<b style='font-size:13px;'>อัปโหลดรูปภาพหนังสือจริง *</b>", unsafe_allow_html=True)
             uploaded_file = st.file_uploader("เลือกไฟล์รูปภาพหนังสือ (JPG, PNG)", type=["jpg", "png", "jpeg"], key=f"upl_{k_suf}")
             
-            uploaded_img_url = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80"
+            # ใช้รูปเดิมถ้ามี หรือใช้รูปตัวอย่าง
+            uploaded_img_url = edit_bk['img'] if edit_bk else "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80"
             
             if uploaded_file is not None:
                 st.image(uploaded_file, caption="รูปภาพหนังสือที่คุณอัปโหลด", use_container_width=True)
@@ -1016,81 +1037,107 @@ elif st.session_state.current_view == 'seller':
                 except Exception:
                     uploaded_img_url = "data:image/png;base64," + base64.b64encode(bytes_data).decode()
             else:
-                st.info("💡 สามารถลองอัปโหลดรูปหนังสือจริงเพื่อพรีวิวได้ หากไม่ได้อัปโหลดจะใช้รูปตัวอย่างเริ่มต้นแทน")
-                st.image("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80", width=140, caption="ตัวอย่างภาพปก")
+                st.image(uploaded_img_url, width=140, caption="ภาพปกปัจจุบัน" if edit_bk else "ตัวอย่างภาพปก")
 
             condition_val = st.select_slider("สภาพหนังสือ", options=["70% เก่าเก็บ", "85% ปานกลาง", "95% ดีมาก", "100% มือหนึ่ง"], value="95% ดีมาก", key=f"cond_{k_suf}")
 
         with col_form_right:
-            b_title_input = st.text_input("ชื่อหนังสือ (Book Title) *", value="", placeholder="กรอกชื่อหนังสือ...", key=f"title_{k_suf}")
-            b_author_input = st.text_input("ผู้แต่ง (Author) *", value="", placeholder="กรอกชื่อผู้แต่ง...", key=f"auth_{k_suf}")
-            b_cat_input = st.selectbox("หมวดหมู่หนังสือ *", ["จิตวิทยา & พัฒนาตนเอง", "วรรณกรรม & นิยายแปล", "ธุรกิจ & การลงทุน", "หนังสือภาพ & ไลฟ์สไตล์"], key=f"cat_{k_suf}")
+            b_title_input = st.text_input("ชื่อหนังสือ (Book Title) *", value=edit_bk['title'] if edit_bk else "", placeholder="กรอกชื่อหนังสือ...", key=f"title_{k_suf}")
+            
+            # ทำความสะอาดชื่อผู้แต่งเดิมที่อาจมีคำว่า 'โดย ' ติดมา
+            def_author = edit_bk['author'].replace('โดย ', '') if edit_bk else ""
+            b_author_input = st.text_input("ผู้แต่ง (Author) *", value=def_author, placeholder="กรอกชื่อผู้แต่ง...", key=f"auth_{k_suf}")
+            
+            cats = ["จิตวิทยา & พัฒนาตนเอง", "วรรณกรรม & นิยายแปล", "ธุรกิจ & การลงทุน", "หนังสือภาพ & ไลฟ์สไตล์"]
+            def_cat_index = cats.index(edit_bk['category']) if edit_bk and edit_bk['category'] in cats else 0
+            b_cat_input = st.selectbox("หมวดหมู่หนังสือ *", cats, index=def_cat_index, key=f"cat_{k_suf}")
 
             p_col1, p_col2 = st.columns(2)
             with p_col1:
-                price_sale = st.number_input("ราคาขายส่งต่อ (฿)", min_value=0, value=200, key=f"psale_{k_suf}")
+                def_price = edit_bk_all['buy_price'] if edit_bk_all else 200
+                price_sale = st.number_input("ราคาขายส่งต่อ (฿)", min_value=0, value=def_price, key=f"psale_{k_suf}")
             with p_col2:
-                price_rent = st.number_input("ค่าเช่าต่อวัน (฿/วัน)", min_value=0, value=5, key=f"prent_{k_suf}")
+                def_rent = edit_bk_all['rent_price'] if edit_bk_all else 5
+                price_rent = st.number_input("ค่าเช่าต่อวัน (฿/วัน)", min_value=0, value=def_rent, key=f"prent_{k_suf}")
 
-            b_desc_input = st.text_area("คำอธิบายหนังสือโดยย่อ", value="", placeholder="กรอกเรื่องย่อหรือรายละเอียดเพิ่มเติม...", key=f"desc_{k_suf}")
+            def_desc = edit_bk_all['desc'] if edit_bk_all else ""
+            b_desc_input = st.text_area("คำอธิบายหนังสือโดยย่อ", value=def_desc, placeholder="กรอกเรื่องย่อหรือรายละเอียดเพิ่มเติม...", key=f"desc_{k_suf}")
 
             st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
 
-            if st.button("💾 บันทึกและลงทะเบียนหนังสือ", key=f"btn_sub_{k_suf}", use_container_width=True):
+            btn_text = "💾 บันทึกการเปลี่ยนแปลง" if edit_bk else "💾 บันทึกและลงทะเบียนหนังสือ"
+            if st.button(btn_text, key=f"btn_sub_{k_suf}", use_container_width=True):
                 if not b_title_input or not b_author_input:
                     st.error("กรุณากรอกชื่อหนังสือและผู้แต่งให้เรียบร้อย")
                 else:
-                    new_id = len(st.session_state.all_books) + 1
-                    new_book_item = {
-                        'id': new_id,
-                        'title': b_title_input,
-                        'full_title': f"{b_title_input} (หนังสือของคุณ)",
-                        'author': b_author_input,
-                        'category': b_cat_input,
-                        'isbn': '978-616-XXXXX-X',
-                        'status': 'my_book',
-                        'status_text': '📘 หนังสือของคุณ',
-                        'condition': condition_val.split()[0],
-                        'condition_full': condition_val,
-                        'buy_price': price_sale,
-                        'original_price': price_sale + 50,
-                        'rent_price': price_rent,
-                        'deposit': 100,
-                        'img': uploaded_img_url,
-                        'desc': b_desc_input if b_desc_input else "หนังสือที่คุณลงทะเบียนเข้าระบบด้วยตนเอง",
-                        'seller_name': st.session_state.user['name'],
-                        'seller_rating': 5.0,
-                        'seller_count': 1,
-                        'is_my_book': True
-                    }
-                    
-                    # 1. Insert to catalog for home page "📘 หนังสือของคุณ"
-                    st.session_state.all_books.insert(0, new_book_item)
+                    if edit_bk:
+                        # อัปเดตข้อมูลเดิม
+                        edit_bk['title'] = b_title_input
+                        edit_bk['author'] = f"โดย {b_author_input}"
+                        edit_bk['category'] = b_cat_input
+                        edit_bk['img'] = uploaded_img_url
+                        edit_bk['cond1'] = f"สภาพ {condition_val.split()[0]}"
+                        edit_bk['rate_label'] = f"เช่า ฿{price_rent}/วัน"
+                        edit_bk['rate_val'] = f"หรือขายขาด ฿{price_sale}"
+                        
+                        if edit_bk_all:
+                            edit_bk_all['title'] = b_title_input
+                            edit_bk_all['author'] = b_author_input
+                            edit_bk_all['category'] = b_cat_input
+                            edit_bk_all['img'] = uploaded_img_url
+                            edit_bk_all['buy_price'] = price_sale
+                            edit_bk_all['rent_price'] = price_rent
+                            edit_bk_all['desc'] = b_desc_input
 
-                    # 2. Insert to user's shelf collection
-                    st.session_state.shelf_books.insert(0, {
-                        'id': new_id,
-                        'title': b_title_input,
-                        'author': f"โดย {b_author_input}",
-                        'category': b_cat_input,
-                        'year': 'พิมพ์ปี 2024',
-                        'img': uploaded_img_url,
-                        'status': 'avail_rent_sale',
-                        'cond1': f"สภาพ {condition_val.split()[0]}",
-                        'cond2': 'ลงทะเบียนใหม่',
-                        'rate_label': f"เช่า ฿{price_rent}/วัน",
-                        'rate_val': f"หรือขายขาด ฿{price_sale}",
-                        'income_label': 'ทำเงินสะสมแล้ว',
-                        'income_val': '฿0 (เพิ่งลงระบบ)',
-                        'btn1': '👁️ สถานะเปิดอยู่',
-                        'btn2': '⚙️ ปรับราคา'
-                    })
+                        st.session_state['toast_msg'] = f"อัปเดตข้อมูล '{b_title_input}' สำเร็จ!"
+                    else:
+                        # ลงทะเบียนเล่มใหม่ (โค้ดเดิม)
+                        new_id = len(st.session_state.all_books) + 1
+                        new_book_item = {
+                            'id': new_id,
+                            'title': b_title_input,
+                            'full_title': f"{b_title_input} (หนังสือของคุณ)",
+                            'author': b_author_input,
+                            'category': b_cat_input,
+                            'isbn': '978-616-XXXXX-X',
+                            'status': 'my_book',
+                            'status_text': '📘 หนังสือของคุณ',
+                            'condition': condition_val.split()[0],
+                            'condition_full': condition_val,
+                            'buy_price': price_sale,
+                            'original_price': price_sale + 50,
+                            'rent_price': price_rent,
+                            'deposit': 100,
+                            'img': uploaded_img_url,
+                            'desc': b_desc_input if b_desc_input else "หนังสือที่คุณลงทะเบียนเข้าระบบด้วยตนเอง",
+                            'seller_name': st.session_state.user['name'],
+                            'seller_rating': 5.0,
+                            'seller_count': 1,
+                            'is_my_book': True
+                        }
+                        st.session_state.all_books.insert(0, new_book_item)
+                        st.session_state.shelf_books.insert(0, {
+                            'id': new_id,
+                            'title': b_title_input,
+                            'author': f"โดย {b_author_input}",
+                            'category': b_cat_input,
+                            'year': 'พิมพ์ปี 2024',
+                            'img': uploaded_img_url,
+                            'status': 'avail_rent_sale',
+                            'cond1': f"สภาพ {condition_val.split()[0]}",
+                            'cond2': 'ลงทะเบียนใหม่',
+                            'rate_label': f"เช่า ฿{price_rent}/วัน",
+                            'rate_val': f"หรือขายขาด ฿{price_sale}",
+                            'income_label': 'ทำเงินสะสมแล้ว',
+                            'income_val': '฿0 (เพิ่งลงระบบ)',
+                            'btn1': '👁️ สถานะเปิดอยู่',
+                            'btn2': '⚙️ ปรับราคา'
+                        })
+                        st.session_state['toast_msg'] = f"ลงทะเบียน '{b_title_input}' สำเร็จและเพิ่มเข้าคลังหนังสือแล้ว!"
                     
-                    # Switch to shelf view
+                    st.session_state.edit_book_id = None
                     st.session_state.seller_subview = 'shelf'
                     reset_add_book_form()
-                    
-                    st.session_state['toast_msg'] = f"ลงทะเบียน '{b_title_input}' สำเร็จและเพิ่มเข้าคลังหนังสือแล้ว!"
                     st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
