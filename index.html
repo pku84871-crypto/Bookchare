@@ -63,6 +63,7 @@
   </style>
   <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 
 <body class="bg-earth-bg text-earth-text antialiased">
@@ -666,9 +667,9 @@
             📄
           </div>
           <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-earth-primary">ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)
+            <h2 id="seller-form-title" class="text-xl sm:text-2xl font-bold text-earth-primary">ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)
             </h2>
-            <p class="text-xs text-earth-muted">
+            <p id="seller-form-subtitle" class="text-xs text-earth-muted">
               กรอกข้อมูลให้ครบถ้วนเพื่อเพิ่มโอกาสให้นักอ่านค้นพบหนังสือและไว้วางใจในการเช่าหรือซื้อ</p>
           </div>
         </div>
@@ -837,13 +838,17 @@
 
           <!-- Actions -->
           <div class="flex items-center justify-between pt-2">
+            <button id="form-delete-wrap" onclick="deleteShelfBook(editingBookId)" style="display:none"
+              class="px-4 py-2 rounded-xl bg-[#F8EDEB] border border-[#F3D5CF] text-[#9C382A] text-xs font-bold hover:bg-red-50 transition flex items-center gap-1.5">
+              🗑️ ลบหนังสือเล่มนี้
+            </button>
             <button onclick="showView('seller-shelf')"
               class="text-xs text-earth-muted hover:text-earth-primary font-bold">
               ดูตู้หนังสือของฉัน
             </button>
-            <button onclick="handleSaveNewBook()"
+            <button id="seller-save-btn" onclick="handleSaveNewBook()"
               class="px-6 py-3.5 rounded-2xl bg-earth-primary text-white font-bold text-sm hover:bg-earth-primary-hover shadow-md transition flex items-center gap-2">
-              <span class="material-symbols-outlined text-lg">save</span> บันทึกและขึ้นแสดงบนระบบทันที
+              <span class="material-symbols-outlined text-lg">save</span> <span id="seller-save-btn-text">บันทึกและขึ้นแสดงบนระบบทันที</span>
             </button>
           </div>
 
@@ -1292,7 +1297,7 @@
 
       if (view === 'cart') renderCart();
       if (view === 'seller-shelf') renderShelf();
-      if (view === 'seller-add') resetSellerForm();
+      if (view === 'seller-add' && !editingBookId) resetSellerForm();
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1812,6 +1817,15 @@
       }
 
       function resetSellerForm() {
+        editingBookId = null;
+        const t = document.getElementById('seller-form-title');
+        if (t) t.innerText = 'ลงทะเบียนหนังสือใหม่เข้าสู่ระบบ (Add New Book)';
+        const st = document.getElementById('seller-form-subtitle');
+        if (st) st.innerText = 'กรอกข้อมูลให้ครบถ้วนเพื่อเพิ่มโอกาสให้นักอ่านค้นพบหนังสือและไว้วางใจในการเช่าหรือซื้อ';
+        const delBtn = document.getElementById('form-delete-wrap');
+        if (delBtn) delBtn.style.display = 'none';
+        const saveTxt = document.getElementById('seller-save-btn-text');
+        if (saveTxt) saveTxt.innerText = 'บันทึกและขึ้นแสดงบนระบบทันที';
         document.getElementById('add-b-title').value = '';
         document.getElementById('add-b-author').value = '';
         document.getElementById('add-b-isbn').value = '';
@@ -1828,6 +1842,78 @@
         updateConditionPreview('95');
       }
 
+      // ===================== ตั้งค่าหนังสือ (โหมดแก้ไข) & ลบหนังสือ =====================
+      // เปิดหน้าลงทะเบียนหนังสือพร้อมข้อมูลเดิมของเล่มนั้น เพื่อแก้ไขหรือลบได้
+      function openBookSettings(id) {
+        const b = shelfBooks.find(x => x.id === id);
+        if (!b) { alert('ไม่พบข้อมูลหนังสือเล่มนี้'); return; }
+        editingBookId = id;
+        const mb = myBooks.find(x => x.id === id) || {};
+
+        // เติมข้อมูลเดิมลงในฟอร์ม
+        document.getElementById('add-b-title').value = b.title || '';
+        document.getElementById('add-b-author').value = (b.author || '').replace(/^โดย\s*/, '');
+        document.getElementById('add-b-isbn').value = mb.isbn || '';
+        const catSel = document.getElementById('add-b-cat');
+        if ([...catSel.options].some(o => o.text === b.category)) catSel.value = b.category;
+
+        const rentMatch = (b.rateLabel || '').match(/฿(\d+)\/วัน/);
+        const saleMatch = (b.rateValue || '').match(/฿(\d+)/);
+        document.getElementById('add-b-sale').value = saleMatch ? saleMatch[1] : (mb.buyPrice || 200);
+        document.getElementById('add-b-rent').value = rentMatch ? rentMatch[1] : (mb.rentRate || 5);
+        document.getElementById('add-b-deposit').value = mb.deposit || 150;
+
+        // สภาพหนังสือ (slider)
+        const condMatch = (b.cond1 || '').match(/(\d+)/);
+        const slider = document.querySelector('#view-seller-add input[type="range"]');
+        if (condMatch) slider.value = condMatch[1];
+        updateConditionPreview(slider.value);
+
+        // รูปภาพเดิม
+        uploadedImageData = [];
+        const preview = document.getElementById('uploaded-image-preview');
+        preview.innerHTML = '';
+        const fileInput = document.getElementById('add-b-images');
+        if (fileInput) fileInput.value = '';
+        if (b.img) {
+          uploadedImageData.push(b.img);
+          preview.appendChild(makePreviewThumb(b.img, 0));
+        }
+
+        // เปลี่ยนหัวข้อฟอร์มเป็นโหมดแก้ไข + แสดงปุ่มลบ
+        const t = document.getElementById('seller-form-title');
+        if (t) t.innerText = '⚙️ ตั้งค่าหนังสือ (Book Settings)';
+        const st = document.getElementById('seller-form-subtitle');
+        if (st) st.innerText = 'แก้ไขข้อมูล ราคา สภาพ หรือรูปภาพของหนังสือเล่มนี้ หรือลบออกจากคลังถาวร';
+        const delBtn = document.getElementById('form-delete-wrap');
+        if (delBtn) delBtn.style.display = 'inline-flex';
+        const saveTxt = document.getElementById('seller-save-btn-text');
+        if (saveTxt) saveTxt.innerText = 'บันทึกการเปลี่ยนแปลง';
+
+        showView('seller-add');
+      }
+
+      // ลบหนังสือออกจากคลังและตลาดถาวร (ทำงานได้ทั้งจากหน้าคลังและจากในฟอร์มแก้ไข)
+      function deleteShelfBook(id) {
+        if (!id) return;
+        const b = shelfBooks.find(x => x.id === id) || myBooks.find(x => x.id === id);
+        if (!b) return;
+        if (!confirm(`ต้องการลบ '${b.title}' ออกจากคลังหนังสือถาวรหรือไม่?\nการลบจะไม่สามารถกู้คืนได้`)) return;
+        shelfBooks = shelfBooks.filter(x => x.id !== id);
+        myBooks = myBooks.filter(x => x.id !== id);
+        saveShelfBooks();
+        saveBooks();
+        if (editingBookId === id) {
+          editingBookId = null;
+          resetSellerForm();
+          showView('seller-shelf');
+        } else {
+          renderShelf();
+        }
+        renderBooks();
+        alert(`ลบ '${b.title}' เรียบร้อยแล้ว`);
+      }
+
       function handleSaveNewBook() {
         const title = document.getElementById('add-b-title').value.trim();
         const author = document.getElementById('add-b-author').value.trim();
@@ -1841,6 +1927,44 @@
 
         if (!title || !author) {
           alert('กรุณากรอกชื่อหนังสือและผู้แต่ง');
+          return;
+        }
+
+        // ── โหมดแก้ไข: อัปเดตข้อมูลหนังสือเล่มเดิม (ทั้งในคลังและในหน้าตลาด) ──
+        if (editingBookId) {
+          const sb = shelfBooks.find(x => x.id === editingBookId);
+          if (sb) {
+            sb.title = title;
+            sb.author = 'โดย ' + author;
+            sb.category = cat;
+            sb.cond1 = 'สภาพ ' + condText.split(' ')[0];
+            sb.rateLabel = `เช่า ฿${rent}/วัน (฿${rent * 7}/wk)`;
+            sb.rateValue = `หรือขายขาด ฿${sale}`;
+            if (uploadedImageData[0]) sb.img = uploadedImageData[0];
+          }
+          const mb = myBooks.find(x => x.id === editingBookId);
+          if (mb) {
+            mb.title = title;
+            mb.fullTitle = title;
+            mb.author = author;
+            mb.category = cat;
+            if (isbn) mb.isbn = isbn;
+            mb.buyPrice = sale;
+            mb.originalPrice = sale + 50;
+            mb.rentRate = rent;
+            mb.deposit = dep;
+            mb.condition = condText.split(' ')[0];
+            mb.conditionFull = condText;
+            if (uploadedImageData[0]) {
+              mb.img = uploadedImageData[0];
+              mb.thumbnails = uploadedImageData.slice(0, 3);
+            }
+          }
+          saveShelfBooks();
+          saveBooks();
+          alert(`บันทึกการเปลี่ยนแปลงของ '${title}' เรียบร้อยแล้ว`);
+          editingBookId = null;
+          showView('seller-shelf');
           return;
         }
 
@@ -1862,8 +1986,8 @@
           rateValue: `หรือขายขาด ฿${sale}`,
           incomeLabel: 'ทำเงินสะสมแล้ว',
           incomeValue: '฿0 (เพิ่งลงระบบ)',
-          btn1Text: '👁️ สถานะเปิดอยู่',
-          btn2Text: '⚙️ ปรับราคา',
+          btn1Text: '🗑️ ลบหนังสือ',
+          btn2Text: '⚙️ ตั้งค่าหนังสือ',
           owner: currentUser ? currentUser.username : 'meena'
         });
         saveShelfBooks();
@@ -1929,6 +2053,7 @@
       }
 
       let activeShelfFilter = 'all';
+      let editingBookId = null; // ไอดีหนังสือที่กำลังแก้ไข (โหมดตั้งค่าหนังสือ)
 
       function setShelfFilter(f) {
         activeShelfFilter = f;
@@ -2112,11 +2237,11 @@
               </div>
 
               <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="alert('${btn1}: ${b.title}')" class="py-1.5 px-2 bg-earth-bg border border-earth-border hover:bg-earth-secondary/50 rounded-xl text-earth-primary font-semibold text-[11px] flex items-center justify-center gap-1 transition">
-                  ${btn1}
+                <button onclick="deleteShelfBook(${b.id})" title="ลบหนังสือออกจากคลังถาวร" class="py-1.5 px-2 bg-[#F8EDEB] border border-[#F3D5CF] hover:bg-red-50 text-[#9C382A] font-semibold text-[11px] flex items-center justify-center gap-1 transition">
+                  🗑️ ลบหนังสือ
                 </button>
-                <button onclick="alert('${btn2}: ${b.title}')" class="py-1.5 px-2 bg-white border border-earth-border hover:bg-earth-bg rounded-xl text-earth-primary font-semibold text-[11px] flex items-center justify-center gap-1 transition">
-                  ${btn2}
+                <button onclick="openBookSettings(${b.id})" title="แก้ไขข้อมูลหรือลบหนังสือ" class="py-1.5 px-2 bg-white border border-earth-border hover:bg-earth-bg rounded-xl text-earth-primary font-semibold text-[11px] flex items-center justify-center gap-1 transition">
+                  ⚙️ ตั้งค่าหนังสือ
                 </button>
               </div>
             </div>
