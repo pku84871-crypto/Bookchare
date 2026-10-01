@@ -1340,8 +1340,9 @@
       </div>
     </div>`;
       }).join('');
+    }
 
-      function openBookDetail(id) {
+    function openBookDetail(id) {
         const found = [...BOOKS, ...myBooks].find(b => b.id === id);
         if (!found) return;
         selectedBook = found;
