@@ -1,4 +1,4 @@
-ffrom datetime import date, timedelta
+from datetime import date, timedelta
 import base64
 import streamlit as st
 
