@@ -64,6 +64,7 @@
   <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 
 <body class="bg-earth-bg text-earth-text antialiased">
@@ -1005,6 +1006,25 @@
         </div>
       </div>
 
+      <!-- ======================================================================= -->
+      <!-- INCOMING ORDERS FROM OTHER ACCOUNTS (ด้านล่างของคลังหนังสือ) -->
+      <!-- ======================================================================= -->
+      <div class="pt-6 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-earth-border">
+          <div>
+            <h3 class="text-xl sm:text-2xl font-bold text-earth-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-earth-accent text-2xl">receipt_long</span>
+              คำสั่งซื้อที่สั่งเข้ามา
+            </h3>
+            <p class="text-xs text-earth-muted mt-1">คำสั่งซื้อจากบัญชีอื่นที่สั่งซื้อ/เช่าหนังสือของคุณ — กดปุ่มเพื่ออัปเดตสถานะการจัดเตรียมและจัดส่ง</p>
+          </div>
+          <span id="orders-count-badge" class="bg-earth-secondary text-earth-primary font-bold text-xs px-3.5 py-1.5 rounded-full">0 คำสั่งซื้อ</span>
+        </div>
+        <div id="orders-list" class="space-y-5">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
     </div>
 
     <!-- ======================================================================= -->
@@ -1558,8 +1578,10 @@
             days: diff,
             returnDate: e.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
             rentFee: diff * selectedBook.rentRate,
+            rentRate: selectedBook.rentRate,
             deposit: selectedBook.deposit,
-            img: selectedBook.img
+            img: selectedBook.img,
+            owner: selectedBook.owner || null
           });
           alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้ายืมเรียบร้อยแล้ว!`);
         } else {
@@ -1570,7 +1592,8 @@
             tag: 'ซื้อขาดมือสอง จัดส่งทันที',
             price: selectedBook.buyPrice,
             origPrice: selectedBook.originalPrice,
-            img: selectedBook.img
+            img: selectedBook.img,
+            owner: selectedBook.owner || null
           });
           alert(`เพิ่ม '${selectedBook.title}' ลงในตะกร้าซื้อเรียบร้อยแล้ว!`);
         }
@@ -1676,6 +1699,44 @@
         document.getElementById('success-user-name').innerText = currentUser.name;
         document.getElementById('success-address').innerText = addr;
         document.getElementById('success-total').innerText = document.getElementById('sum-grand-total').innerText;
+
+        // ── สร้างคำสั่งซื้อและส่งเข้าคิวของเจ้าของหนังสือแต่ละบัญชี ──
+        const orderItems = [
+          ...cartRent.map(i => ({ ...i, kind: 'rent' })),
+          ...cartBuy.map(i => ({ ...i, kind: 'buy' }))
+        ];
+        const byOwner = {};
+        orderItems.forEach(it => {
+          const ow = it.owner || 'bookshare_system';
+          (byOwner[ow] = byOwner[ow] || []).push(it);
+        });
+        const etaDate = new Date(Date.now() + 864e5);
+        const etaText = 'พรุ่งนี้ (' + etaDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) + ')';
+        Object.keys(byOwner).forEach(ow => {
+          const items = byOwner[ow];
+          const rentFee = items.filter(i => i.kind === 'rent').reduce((s, i) => s + i.rentFee, 0);
+          const deposit = items.filter(i => i.kind === 'rent').reduce((s, i) => s + (i.deposit || 0), 0);
+          const buyTotal = items.filter(i => i.kind === 'buy').reduce((s, i) => s + i.price, 0);
+          const ship = items.filter(i => i.kind === 'rent').length >= 3 ? 0 : 45;
+          const discount = 30;
+          pushOrderTo(ow, {
+            id: 'BS-' + Date.now().toString().slice(-8),
+            buyerName: currentUser.name,
+            buyerUsername: currentUser.username,
+            address: addr,
+            items: items,
+            rentFee: rentFee,
+            deposit: deposit,
+            buyTotal: buyTotal,
+            ship: ship,
+            discount: discount,
+            total: Math.max(0, rentFee + deposit + buyTotal + ship - discount),
+            status: 'preparing',
+            createdAt: new Date().toISOString(),
+            eta: etaText
+          });
+        });
+
         cartRent = [];
         cartBuy = [];
         updateCartCounters();
@@ -1742,6 +1803,7 @@
         loadCarts();
         loadBooks();
         loadShelf();
+        loadOrders();
         updateAuthUI();
         updateCartCounters();
         renderBooks();
@@ -1768,6 +1830,7 @@
         currentUser = null;
         cartRent = []; cartBuy = [];
         shelfBooks = [];
+        incomingOrders = [];
         updateAuthUI();
         updateCartCounters();
         renderBooks();
@@ -2052,6 +2115,188 @@
         saveShelfBooks();
       }
 
+
+      // ===================== คำสั่งซื้อที่สั่งเข้ามา (Incoming Orders) =====================
+      // เก็บแยกตามบัญชีเจ้าของหนังสือ: bs_orders_<username>
+      let incomingOrders = [];
+
+      function ordersKey(u) { return 'bs_orders_' + (u || (currentUser && currentUser.username)); }
+
+      function loadOrders() {
+        const k = ordersKey();
+        incomingOrders = k ? JSON.parse(localStorage.getItem(k) || '[]') : [];
+      }
+
+      function saveOrders() {
+        const k = ordersKey();
+        if (k) localStorage.setItem(k, JSON.stringify(incomingOrders));
+      }
+
+      // ส่งคำสั่งซื้อเข้าคิวของบัญชีเจ้าของหนังสือ (เรียกได้แม้ตอนนี้ผู้ใช้เป็นอีกบัญชี)
+      function pushOrderTo(owner, order) {
+        if (!owner) return;
+        const k = 'bs_orders_' + owner;
+        const arr = JSON.parse(localStorage.getItem(k) || '[]');
+        arr.unshift(order);
+        localStorage.setItem(k, JSON.stringify(arr));
+        if (currentUser && currentUser.username === owner) loadOrders();
+      }
+
+      function setOrderStatus(orderId, status) {
+        const o = incomingOrders.find(x => x.id === orderId);
+        if (!o) return;
+        o.status = status;
+        saveOrders();
+        renderOrders();
+      }
+
+      const ORDER_STATUS = {
+        preparing:  { label: '⏳ รอจัดเตรียม',     cls: 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A]' },
+        ready:      { label: '📦 เตรียมเสร็จแล้ว', cls: 'bg-[#EAF3EA] text-[#2F5930] border-[#C5DDC5]' },
+        shipping:   { label: '🚚 กำลังจัดส่ง',      cls: 'bg-[#E0E7FF] text-[#3730A3] border-[#C7D2FE]' },
+        delivered:  { label: '✔️ จัดส่งสำเร็จ',     cls: 'bg-earth-bg text-earth-muted border-earth-border' }
+      };
+
+      function renderOrders() {
+        const listEl = document.getElementById('orders-list');
+        const badgeEl = document.getElementById('orders-count-badge');
+        if (!listEl) return;
+
+        const activeCnt = incomingOrders.filter(o => o.status !== 'delivered').length;
+        if (badgeEl) {
+          badgeEl.innerText = `${incomingOrders.length} คำสั่งซื้อ`;
+          badgeEl.className = 'bg-earth-secondary text-earth-primary font-bold text-xs px-3.5 py-1.5 rounded-full';
+        }
+
+        if (!incomingOrders.length) {
+          listEl.innerHTML = `<div class="py-10 text-center text-earth-muted text-sm bg-white rounded-3xl border border-earth-border">
+            <span class="material-symbols-outlined text-3xl mb-1 block">receipt_long</span>
+            <p>ยังไม่มีคำสั่งซื้อจากบัญชีอื่นเข้ามา</p>
+            <p class="text-[11px] mt-1">เมื่อผู้ใช้บัญชีอื่นสั่งซื้อ/เช่าหนังสือของคุณ คำสั่งซื้อจะแสดงที่นี่</p>
+          </div>`;
+          return;
+        }
+
+        listEl.innerHTML = incomingOrders.map(o => {
+          const st = ORDER_STATUS[o.status] || ORDER_STATUS.preparing;
+          const rentItems = o.items.filter(i => i.kind === 'rent');
+          const buyItems = o.items.filter(i => i.kind === 'buy');
+
+          const rentRows = rentItems.map(it => `
+            <div class="flex flex-col sm:flex-row gap-4 bg-earth-bg/50 rounded-2xl p-4 border border-earth-border">
+              <img src="${it.img}" class="w-24 sm:w-28 aspect-[3/4] object-cover rounded-xl border border-earth-border shrink-0" alt="${it.title}" />
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="bg-earth-sage-light text-earth-sage-dark text-[10px] font-bold px-2.5 py-0.5 rounded-full">เช่ายืม ${it.days} วัน</span>
+                  <span class="text-[11px] text-earth-muted">รหัสหนังสือ: BK-${String(it.id).slice(-4).padStart(4, '0')}</span>
+                </div>
+                <h4 class="font-bold text-earth-primary text-sm sm:text-base leading-snug">${it.title}</h4>
+                <p class="text-xs text-earth-muted">ผู้แต่ง: ${it.author}</p>
+                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] sm:text-xs">
+                  <div><span class="text-earth-muted block">ค่าเช่ายืม:</span><b class="text-earth-primary">฿${it.rentFee} (฿${it.rentRate}/วัน)</b></div>
+                  <div><span class="text-earth-muted block">เงินมัดจำ:</span><b class="text-earth-primary">฿${it.deposit} <span class="text-earth-muted font-normal">(คืนเต็มจำนวน)</span></b></div>
+                  <div><span class="text-earth-muted block">กำหนดรับประมาณ:</span><b class="text-earth-accent">${o.eta}</b></div>
+                </div>
+              </div>
+            </div>`).join('');
+
+          const buyRows = buyItems.map(it => `
+            <div class="flex flex-col sm:flex-row gap-4 bg-earth-bg/50 rounded-2xl p-4 border border-earth-border">
+              <img src="${it.img}" class="w-24 sm:w-28 aspect-[3/4] object-cover rounded-xl border border-earth-border shrink-0" alt="${it.title}" />
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="bg-earth-accent/20 text-earth-accent-hover text-[10px] font-bold px-2.5 py-0.5 rounded-full">ซื้อขาด</span>
+                  <span class="text-[11px] text-earth-muted">รหัสหนังสือ: BK-${String(it.id).slice(-4).padStart(4, '0')}</span>
+                </div>
+                <h4 class="font-bold text-earth-primary text-sm sm:text-base leading-snug">${it.title}</h4>
+                <p class="text-xs text-earth-muted">ผู้แต่ง: ${it.author}</p>
+                <div class="grid grid-cols-3 gap-2 pt-2 text-[11px] sm:text-xs">
+                  <div><span class="text-earth-muted block">ราคาขาย:</span><b class="text-earth-primary">฿${it.price} <span class="text-earth-muted font-normal line-through">฿${it.origPrice}</span></b></div>
+                  <div><span class="text-earth-muted block">กำหนดรับประมาณ:</span><b class="text-earth-accent">${o.eta}</b></div>
+                  <div></div>
+                </div>
+              </div>
+            </div>`).join('');
+
+          // ปุ่มจัดการสถานะตามขั้นตอน
+          let actionBtns = '';
+          if (o.status === 'preparing') {
+            actionBtns = `
+              <button onclick="setOrderStatus('${o.id}','ready')" class="px-4 py-2 rounded-xl bg-earth-sage-light border border-earth-sage/40 text-earth-sage-dark text-xs font-bold hover:bg-earth-sage/25 transition flex items-center gap-1.5">✅ เตรียมเสร็จแล้ว</button>
+              <button onclick="setOrderStatus('${o.id}','shipping')" class="px-4 py-2 rounded-xl bg-[#E0E7FF] border border-[#C7D2FE] text-[#3730A3] text-xs font-bold hover:bg-[#C7D2FE]/60 transition flex items-center gap-1.5">🚚 กำลังจัดส่ง</button>`;
+          } else if (o.status === 'ready') {
+            actionBtns = `
+              <button onclick="setOrderStatus('${o.id}','shipping')" class="px-4 py-2 rounded-xl bg-[#E0E7FF] border border-[#C7D2FE] text-[#3730A3] text-xs font-bold hover:bg-[#C7D2FE]/60 transition flex items-center gap-1.5">🚚 กำลังจัดส่ง</button>`;
+          } else if (o.status === 'shipping') {
+            actionBtns = `
+              <button onclick="setOrderStatus('${o.id}','delivered')" class="px-4 py-2 rounded-xl bg-earth-primary text-white text-xs font-bold hover:bg-earth-primary-hover transition flex items-center gap-1.5">✔️ จัดส่งสำเร็จ</button>`;
+          } else {
+            actionBtns = `<span class="text-[11px] text-earth-muted font-semibold">จัดส่งเรียบร้อยแล้ว — ขอบคุณที่แบ่งปันหนังสือ 📚</span>`;
+          }
+
+          return `
+          <div class="bg-white rounded-3xl p-5 sm:p-6 border border-earth-border shadow-sm space-y-4">
+            <!-- ข้อมูลผู้สั่งซื้อ + ที่อยู่จัดส่ง -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="bg-earth-bg/60 rounded-2xl p-4 border border-earth-border flex items-start gap-3">
+                <span class="material-symbols-outlined text-earth-accent bg-white rounded-xl p-2 border border-earth-border text-xl">person</span>
+                <div class="text-xs space-y-0.5 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <b class="text-earth-primary">ข้อมูลผู้สั่งซื้อ</b>
+                    <span class="bg-earth-sage-light text-earth-sage-dark text-[9px] font-bold px-2 py-0.5 rounded-full">ผู้ซื้อ</span>
+                  </div>
+                  <div class="font-bold text-earth-text">${o.buyerName}</div>
+                  <div class="text-earth-muted">บัญชี: ${o.buyerUsername}</div>
+                </div>
+              </div>
+              <div class="bg-earth-bg/60 rounded-2xl p-4 border border-earth-border flex items-start gap-3">
+                <span class="material-symbols-outlined text-earth-accent bg-white rounded-xl p-2 border border-earth-border text-xl">local_shipping</span>
+                <div class="text-xs space-y-0.5 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <b class="text-earth-primary">ที่อยู่จัดส่งพัสดุ</b>
+                    <span class="bg-earth-accent/20 text-earth-accent-hover text-[9px] font-bold px-2 py-0.5 rounded-full">บ้าน</span>
+                  </div>
+                  <div class="text-earth-text leading-relaxed">${o.address}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- รายการเช่ายืม -->
+            ${rentItems.length ? `
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs text-earth-muted pt-1">
+                <b class="text-earth-primary flex items-center gap-1.5 text-sm"><span class="material-symbols-outlined text-base text-earth-sage-dark">auto_stories</span> รายการหนังสือที่เช่ายืม (${rentItems.length} รายการ)</b>
+                <span>จำนวน ${rentItems.length} เล่ม</span>
+              </div>
+              ${rentRows}
+            </div>` : ''}
+
+            <!-- รายการซื้อขาด -->
+            ${buyItems.length ? `
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs text-earth-muted pt-1">
+                <b class="text-earth-primary flex items-center gap-1.5 text-sm"><span class="material-symbols-outlined text-base text-earth-accent">shopping_bag</span> รายการหนังสือที่ซื้อขาด (${buyItems.length} รายการ)</b>
+                <span>จำนวน ${buyItems.length} เล่ม</span>
+              </div>
+              ${buyRows}
+            </div>` : ''}
+
+            <!-- สถานะ + ยอดรวม + ปุ่มจัดการ -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-earth-border">
+              <div class="text-sm">
+                <span class="text-earth-muted text-xs mr-2">ยอดรวมสุทธิ: <b class="text-earth-primary text-xl">฿${o.total}</b></span>
+                <span class="text-earth-sage-dark text-xs font-bold">✓ จ่ายแล้ว (PromptPay)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-bold px-3 py-1.5 rounded-full border ${st.cls}">${st.label}</span>
+                ${actionBtns}
+              </div>
+            </div>
+            <div class="text-[10px] text-earth-muted">คำสั่งซื้อ #${o.id} • สั่งเมื่อ ${new Date(o.createdAt).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+          </div>`;
+        }).join('');
+      }
+
       let activeShelfFilter = 'all';
       let editingBookId = null; // ไอดีหนังสือที่กำลังแก้ไข (โหมดตั้งค่าหนังสือ)
 
@@ -2252,6 +2497,9 @@
         if (pageInfo) {
           pageInfo.innerText = `กำลังแสดงหนังสือลำดับที่ 1 - ${filtered.length} จากทั้งหมด ${totalCount} เล่มในตู้หนังสือของคุณ`;
         }
+
+        // แสดงคำสั่งซื้อที่บัญชีอื่นสั่งเข้ามาด้านล่างของคลังหนังสือ
+        renderOrders();
       }
 
       function openLoginModal() { openModal('login-modal'); }
@@ -2275,6 +2523,7 @@
 
         loadBooks(); // ดึงหนังสือในตลาด (รวมของทุกบัญชี)
         if (currentUser) loadShelf(); // ดึงคลังเฉพาะบัญชีที่ล็อกอินค้างไว้
+        if (currentUser) loadOrders(); // ดึงคำสั่งซื้อที่สั่งเข้ามาของบัญชีนี้
         updateAuthUI();
         renderCategories();
         renderBooks();
